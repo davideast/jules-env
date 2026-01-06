@@ -1,8 +1,11 @@
 {
-  "name": "/app",
-  "module": "index.ts",
+  "name": "jules-env",
+  "version": "0.0.1",
+  "module": "src/cli.ts",
+  "bin": {
+    "jules-env": "./jules-env"
+  },
   "type": "module",
-  "private": true,
   "devDependencies": {
     "@types/bun": "latest"
   },
@@ -12,5 +15,10 @@
   "dependencies": {
     "commander": "^14.0.2",
     "zod": "3.23.8"
+  },
+  "scripts": {
+    "build": "bun build ./src/cli.ts --compile --outfile jules-env",
+    "start": "bun run ./src/cli.ts",
+    "test": "bun test"
   }
 }
