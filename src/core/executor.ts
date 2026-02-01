@@ -20,7 +20,12 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
 
       let skip = false;
       if (step.checkCmd) {
-        const check = Bun.spawnSync({ cmd: step.checkCmd.split(' ') });
+        const check = Bun.spawn({
+          cmd: step.checkCmd.split(' '),
+          stdout: 'ignore',
+          stderr: 'ignore',
+        });
+        await check.exited;
         if (check.exitCode === 0) {
           console.log(`  -> Skipped (Check passed)`);
           skip = true;
@@ -28,7 +33,12 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
       }
 
       if (!skip) {
-        const proc = Bun.spawnSync({ cmd: step.cmd.split(' '), stdout: 'inherit', stderr: 'inherit' });
+        const proc = Bun.spawn({
+          cmd: step.cmd.split(' '),
+          stdout: 'inherit',
+          stderr: 'inherit',
+        });
+        await proc.exited;
         if (proc.exitCode !== 0) {
           throw new Error(`Command failed: ${step.cmd}`);
         }
