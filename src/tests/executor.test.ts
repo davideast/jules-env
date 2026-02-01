@@ -72,4 +72,27 @@ describe("Executor", () => {
         expect(existsSync(nestedFile)).toBe(true);
         expect(readFileSync(nestedFile, 'utf-8')).toBe("Nested Hello");
     });
+
+    test("writes env vars and paths to .jules-state", async () => {
+        const plan = ExecutionPlanSchema.parse({
+            installSteps: [],
+            env: { "TEST_VAR": "TEST_VAL" },
+            paths: ["/test/path"],
+            files: [],
+        });
+
+        // Clean up .jules-state before test
+        const stateFile = join(process.cwd(), '.jules-state');
+        if (existsSync(stateFile)) unlinkSync(stateFile);
+
+        await executePlan(plan, false);
+
+        expect(existsSync(stateFile)).toBe(true);
+        const content = readFileSync(stateFile, 'utf-8');
+        expect(content).toContain('export PATH="/test/path:$PATH"');
+        expect(content).toContain('export TEST_VAR="TEST_VAL"');
+
+        // Cleanup
+        unlinkSync(stateFile);
+    });
 });
