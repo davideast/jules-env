@@ -23,9 +23,12 @@ export const DartRecipe: Recipe = {
 
     let dartPrefix = '';
     try {
-        const proc = Bun.spawnSync({ cmd: ['brew', '--prefix', 'dart-sdk'] });
-        if (proc.exitCode === 0) {
-            dartPrefix = proc.stdout.toString().trim();
+        const proc = Bun.spawn({ cmd: ['brew', '--prefix', 'dart-sdk'], stdout: 'pipe' });
+        const stdout = await new Response(proc.stdout).text();
+        const exitCode = await proc.exited;
+
+        if (exitCode === 0) {
+            dartPrefix = stdout.trim();
         } else {
              // Fallback or error? For a prototype, let's assume standard brew location if command fails (unlikely if brew is installed)
              // Or maybe we can't fully resolve env vars until install is done?
