@@ -1,5 +1,5 @@
 import type { ExecutionPlan } from './spec';
-import { appendFileSync } from 'node:fs';
+import { mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 
 export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
@@ -53,9 +53,8 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
        console.log(`[File] Write to ${file.path}:`);
        console.log(file.content);
     } else {
-       const fs = await import('node:fs/promises');
-       await fs.mkdir(dirname(file.path), { recursive: true });
-       await fs.writeFile(file.path, file.content);
+       await mkdir(dirname(file.path), { recursive: true });
+       await writeFile(file.path, file.content);
     }
   }
 
@@ -79,7 +78,7 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
     console.log(stateContent);
   } else {
     if (stateContent) {
-      appendFileSync(stateFile, stateContent);
+      await appendFile(stateFile, stateContent);
       console.log(`Updated .jules-state`);
     }
   }
