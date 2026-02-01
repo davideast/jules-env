@@ -1,6 +1,6 @@
 import type { ExecutionPlan } from './spec';
 import { appendFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
 
 export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
   if (dryRun) {
@@ -43,11 +43,8 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
        console.log(`[File] Write to ${file.path}:`);
        console.log(file.content);
     } else {
-       // TODO: Implement file writing for non-dry-run if needed.
-       // The spec says "The tool will run in a subshell. To affect the parent shell, it must write environment changes to a file named .jules-state"
-       // The plan.files might be for other config files.
-       // For now, I will implement it.
        const fs = await import('node:fs/promises');
+       await fs.mkdir(dirname(file.path), { recursive: true });
        await fs.writeFile(file.path, file.content);
     }
   }
