@@ -60,18 +60,16 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
 
   // 3. State Persistence (.jules-state)
   const stateFile = resolve(process.cwd(), '.jules-state');
-  const lines: string[] = [];
+  let stateContent = '';
 
   if (plan.paths.length > 0) {
     // Prepend to PATH
-    lines.push(`export PATH="${plan.paths.join(':')}:$PATH"\n`);
+    stateContent += `export PATH="${plan.paths.join(':')}:$PATH"\n`;
   }
 
   for (const [key, val] of Object.entries(plan.env)) {
-    lines.push(`export ${key}="${val}"\n`);
+    stateContent += `export ${key}="${val}"\n`;
   }
-
-  const stateContent = lines.join('');
 
   if (dryRun) {
     console.log(`[State] Append to .jules-state:`);
