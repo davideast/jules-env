@@ -24,9 +24,10 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
           cmd: step.checkCmd.split(' '),
           stdout: 'ignore',
           stderr: 'ignore',
+          stdin: 'ignore',
         });
-        await check.exited;
-        if (check.exitCode === 0) {
+        const exitCode = await check.exited;
+        if (exitCode === 0) {
           console.log(`  -> Skipped (Check passed)`);
           skip = true;
         }
@@ -37,9 +38,10 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
           cmd: step.cmd.split(' '),
           stdout: 'inherit',
           stderr: 'inherit',
+          stdin: 'inherit',
         });
-        await proc.exited;
-        if (proc.exitCode !== 0) {
+        const exitCode = await proc.exited;
+        if (exitCode !== 0) {
           throw new Error(`Command failed: ${step.cmd}`);
         }
         console.log(`  -> Done`);
