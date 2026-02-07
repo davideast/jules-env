@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 export const DartRecipe: Recipe = {
   name: 'dart',
@@ -24,9 +24,34 @@ export const DartRecipe: Recipe = {
 
     let dartPrefix = '';
     try {
-        const result = spawnSync('brew', ['--prefix', 'dart-sdk'], { encoding: 'utf-8' });
-        if (result.status === 0) {
-            dartPrefix = result.stdout.trim();
+        // @ts-ignore: Bun check for cross-runtime support
+        if (typeof Bun !== 'undefined') {
+            // @ts-ignore: Bun spawn
+            const proc = Bun.spawn(['brew', '--prefix', 'dart-sdk'], {
+                stdout: 'pipe',
+                stderr: 'ignore',
+            });
+            const text = await new Response(proc.stdout).text();
+            const exitCode = await proc.exited;
+            if (exitCode === 0) {
+                dartPrefix = text.trim();
+            }
+        } else {
+            // Node.js fallback using spawn
+            await new Promise<void>((resolve, reject) => {
+                const proc = spawn('brew', ['--prefix', 'dart-sdk'], { stdio: ['ignore', 'pipe', 'ignore'] });
+                let stdout = '';
+                proc.stdout!.on('data', (chunk) => stdout += chunk);
+                proc.on('close', (code) => {
+                    if (code === 0) {
+                        dartPrefix = stdout.trim();
+                        resolve();
+                    } else {
+                        reject(new Error(`Command failed with code ${code}`));
+                    }
+                });
+                proc.on('error', reject);
+            });
         }
     } catch (e) {
         // ignore — brew may not be installed
