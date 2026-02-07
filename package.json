@@ -1,24 +1,30 @@
 {
   "name": "jules-env",
   "version": "0.0.1",
-  "module": "src/cli.ts",
-  "bin": {
-    "jules-env": "./jules-env"
-  },
+  "description": "Configure ephemeral development environments",
   "type": "module",
+  "main": "dist/cli.mjs",
+  "bin": {
+    "jules-env": "./bin/jules-env"
+  },
+  "files": ["bin/", "dist/", "README.md"],
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^22",
+    "commander": "^14.0.2",
+    "zod": "3.23.8"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
-  "dependencies": {
-    "commander": "^14.0.2",
-    "zod": "3.23.8"
-  },
   "scripts": {
-    "build": "bun build ./src/cli.ts --compile --outfile jules-env",
+    "build": "bun run build:node && bun run build:binary",
+    "build:node": "bun build ./src/cli.ts --outfile dist/cli.mjs --target node",
+    "build:binary": "bun build ./src/cli.ts --compile --outfile jules-env",
     "start": "bun run ./src/cli.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check:all": "bun run scripts/prepublish-checks.ts",
+    "prepack": "bun run scripts/prepublish-checks.ts"
   }
 }

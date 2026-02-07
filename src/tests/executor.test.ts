@@ -73,7 +73,7 @@ describe("Executor", () => {
         expect(readFileSync(nestedFile, 'utf-8')).toBe("Nested Hello");
     });
 
-    test("writes env vars and paths to .jules-state", async () => {
+    test("writes env vars and paths to .jules/shellenv", async () => {
         const plan = ExecutionPlanSchema.parse({
             installSteps: [],
             env: { "TEST_VAR": "TEST_VAL" },
@@ -81,8 +81,9 @@ describe("Executor", () => {
             files: [],
         });
 
-        // Clean up .jules-state before test
-        const stateFile = join(process.cwd(), '.jules-state');
+        // Clean up .jules/shellenv before test
+        const julesDir = join(process.cwd(), '.jules');
+        const stateFile = join(julesDir, 'shellenv');
         if (existsSync(stateFile)) unlinkSync(stateFile);
 
         await executePlan(plan, false);

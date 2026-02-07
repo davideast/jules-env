@@ -1,0 +1,15 @@
+#!/bin/sh
+# Resolve through npm symlink to find the real package location
+if [ -L "$0" ]; then
+  LINK="$(readlink "$0")"
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && cd "$(dirname "$LINK")" && pwd)"
+else
+  SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+fi
+CLI="$SCRIPT_DIR/../dist/cli.mjs"
+
+if command -v bun > /dev/null 2>&1; then
+  exec bun "$CLI" "$@"
+else
+  exec node "$CLI" "$@"
+fi
