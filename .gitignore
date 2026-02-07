@@ -1,5 +1,7 @@
 node_modules/
-.jules-state
+dist/
+.jules/shellenv
 .DS_Store
 **/.cache/
-jules-env
+/jules-env
+*.tgz

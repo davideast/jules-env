@@ -3,6 +3,7 @@ import { UseContextSchema } from './core/spec';
 import { executePlan } from './core/executor';
 import { DartRecipe } from './recipes/dart';
 import { z } from 'zod';
+import pkg from '../package.json';
 
 const program = new Command();
 
@@ -14,7 +15,7 @@ const recipes: Record<string, any> = {
 program
   .name('jules-env')
   .description('Configure ephemeral development environments')
-  .version('0.0.1');
+  .version(pkg.version);
 
 program
   .command('use <runtime>')

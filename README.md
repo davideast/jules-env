@@ -7,7 +7,7 @@ A CLI tool for managing ephemeral development environments. `jules-env` allows y
 -   **Ephemeral Environment Management**: Easily setup and tear down development environments.
 -   **Runtime Support**: Currently supports the **Dart** runtime.
 -   **Dry-Run Mode**: Preview the changes that will be made without executing them.
--   **State Persistence**: Environment state is saved to a `.jules-state` file.
+-   **State Persistence**: Environment state is saved to a `.jules/shellenv` file.
 
 ## Prerequisites
 
@@ -58,7 +58,7 @@ bun run src/cli.ts use dart
 
 This will:
 -   Install the Dart SDK using Homebrew (`brew install dart-sdk`).
--   Generate a `.jules-state` file with the necessary environment variables (`DART_SDK`) and `PATH` updates.
+-   Generate a `.jules/shellenv` file with the necessary environment variables (`DART_SDK`) and `PATH` updates.
 
 ### 2. Setup Dart with a Specific Version
 
@@ -82,9 +82,9 @@ This will output the plan and what commands would be executed.
 
 ## Environment State
 
-After running the command, a `.jules-state` file is created (or updated) in the current directory. This file contains the environment variables and paths needed for the runtime.
+After running the command, a `.jules/shellenv` file is created (or updated) in the current directory. This file contains the environment variables and paths needed for the runtime.
 
-Example `.jules-state` content:
+Example `.jules/shellenv` content:
 ```bash
 export DART_SDK="/opt/homebrew/opt/dart-sdk/libexec"
 export PATH="/opt/homebrew/opt/dart-sdk/bin:$PATH"
@@ -92,7 +92,7 @@ export PATH="/opt/homebrew/opt/dart-sdk/bin:$PATH"
 
 You can source this file to activate the environment:
 ```bash
-source .jules-state
+source .jules/shellenv
 ```
 
 ## Development

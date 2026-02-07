@@ -1,4 +1,5 @@
 import type { ExecutionPlan } from './spec';
+import { spawn } from 'node:child_process';
 import { mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 
@@ -20,13 +21,11 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
 
       let skip = false;
       if (step.checkCmd) {
-        const check = Bun.spawn({
-          cmd: step.checkCmd.split(' '),
-          stdout: 'ignore',
-          stderr: 'ignore',
-          stdin: 'ignore',
+        const checkParts = step.checkCmd.split(' ');
+        const check = spawn(checkParts[0]!, checkParts.slice(1), {
+          stdio: 'ignore',
         });
-        const exitCode = await check.exited;
+        const exitCode = await new Promise<number>((res) => check.on('close', (code) => res(code ?? 1)));
         if (exitCode === 0) {
           console.log(`  -> Skipped (Check passed)`);
           skip = true;
@@ -34,13 +33,11 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
       }
 
       if (!skip) {
-        const proc = Bun.spawn({
-          cmd: step.cmd.split(' '),
-          stdout: 'inherit',
-          stderr: 'inherit',
-          stdin: 'inherit',
+        const cmdParts = step.cmd.split(' ');
+        const proc = spawn(cmdParts[0]!, cmdParts.slice(1), {
+          stdio: 'inherit',
         });
-        const exitCode = await proc.exited;
+        const exitCode = await new Promise<number>((res) => proc.on('close', (code) => res(code ?? 1)));
         if (exitCode !== 0) {
           throw new Error(`Command failed: ${step.cmd}`);
         }
@@ -60,8 +57,9 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
     }
   }
 
-  // 3. State Persistence (.jules-state)
-  const stateFile = resolve(process.cwd(), '.jules-state');
+  // 3. State Persistence (.jules/shellenv)
+  const julesDir = resolve(process.cwd(), '.jules');
+  const stateFile = resolve(julesDir, 'shellenv');
   let stateContent = '';
 
   if (plan.paths.length > 0) {
@@ -74,12 +72,13 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
   }
 
   if (dryRun) {
-    console.log(`[State] Append to .jules-state:`);
+    console.log(`[State] Append to .jules/shellenv:`);
     console.log(stateContent);
   } else {
     if (stateContent) {
+      await mkdir(julesDir, { recursive: true });
       await appendFile(stateFile, stateContent);
-      console.log(`Updated .jules-state`);
+      console.log(`Updated .jules/shellenv`);
     }
   }
 }
