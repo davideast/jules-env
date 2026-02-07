@@ -1,13 +1,17 @@
 {
-  "name": "jules-env",
+  "name": "@_davideast/jules-env",
   "version": "0.0.1",
   "description": "Configure ephemeral development environments",
+  "license": "Apache-2.0",
   "type": "module",
   "main": "dist/cli.mjs",
   "bin": {
     "jules-env": "./bin/jules-env"
   },
   "files": ["bin/", "dist/", "README.md"],
+  "publishConfig": {
+    "access": "public"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^22",

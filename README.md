@@ -1,104 +1,128 @@
 # jules-env
 
-A CLI tool for managing ephemeral development environments. `jules-env` allows you to configure and switch between different runtime environments seamlessly.
-
-## Features
-
--   **Ephemeral Environment Management**: Easily setup and tear down development environments.
--   **Runtime Support**: Currently supports the **Dart** runtime.
--   **Dry-Run Mode**: Preview the changes that will be made without executing them.
--   **State Persistence**: Environment state is saved to a `.jules/shellenv` file.
-
-## Prerequisites
-
--   [Bun](https://bun.sh/)
--   [Homebrew](https://brew.sh/) (Required for the Dart recipe)
-
-## Installation
-
-1.  Clone the repository:
-    ```bash
-    git clone <repository_url>
-    cd jules-env
-    ```
-
-2.  Install dependencies:
-    ```bash
-    bun install
-    ```
-
-## Usage
-
-The CLI is executed using `bun`. The main command is `use`.
+Configure ephemeral development environments in one command.
 
 ```bash
-bun run src/cli.ts use <runtime> [options]
+jules-env use dart
 ```
 
-### Arguments
+That's it. The runtime is installed, environment variables are set, and your shell is configured:
 
--   `<runtime>`: The name of the runtime environment to setup (e.g., `dart`).
-
-### Options
-
--   `--version <v>`: Specify the version of the runtime to install. Defaults to `latest`.
--   `--dry-run`: Simulate the execution. No changes will be made to the system.
--   `--preset <p>`: Apply a specific configuration preset (if available for the runtime).
--   `-h, --help`: Display help for command.
-
-## Examples
-
-### 1. Setup Dart Environment (Latest Version)
-
-To setup the latest version of the Dart SDK:
-
-```bash
-bun run src/cli.ts use dart
+```
+✔ brew install dart-sdk
+Wrote .jules/shellenv
+  export PATH="/opt/homebrew/opt/dart-sdk/bin:$PATH"
+  export DART_SDK="/opt/homebrew/opt/dart-sdk/libexec"
 ```
 
-This will:
--   Install the Dart SDK using Homebrew (`brew install dart-sdk`).
--   Generate a `.jules/shellenv` file with the necessary environment variables (`DART_SDK`) and `PATH` updates.
+## Runtime configuration
 
-### 2. Setup Dart with a Specific Version
+`jules-env` follows a **recipe → plan → execute** model:
 
-To setup a specific version (e.g., 3.2):
+1. **Recipe** — A recipe describes how to install a runtime. It probes the system (e.g., `brew --prefix dart-sdk`) but never modifies it.
+2. **Plan** — The recipe produces an execution plan: shell commands to run, environment variables to set, and paths to prepend.
+3. **Execute** — The plan runs. Install steps that are already satisfied (checked via an optional `checkCmd`) are skipped. State is persisted to `.jules/shellenv`.
 
-```bash
-bun run src/cli.ts use dart --version 3.2
-```
+## Shell environment
 
-*(Note: The current Dart recipe uses Homebrew, which typically installs the latest version. The version flag is passed to the context but implementation depends on the recipe.)*
-
-### 3. Dry Run
-
-To see what changes would be made without actually running them:
+After execution, `.jules/shellenv` contains the environment your runtime needs:
 
 ```bash
-bun run src/cli.ts use dart --dry-run
-```
-
-This will output the plan and what commands would be executed.
-
-## Environment State
-
-After running the command, a `.jules/shellenv` file is created (or updated) in the current directory. This file contains the environment variables and paths needed for the runtime.
-
-Example `.jules/shellenv` content:
-```bash
-export DART_SDK="/opt/homebrew/opt/dart-sdk/libexec"
 export PATH="/opt/homebrew/opt/dart-sdk/bin:$PATH"
+export DART_SDK="/opt/homebrew/opt/dart-sdk/libexec"
 ```
 
-You can source this file to activate the environment:
+Source it to activate:
+
 ```bash
 source .jules/shellenv
 ```
 
+The file is appended to on subsequent runs, so multiple runtimes compose cleanly.
+
+## CLI reference
+
+```
+jules-env use <runtime> [options]
+```
+
+### Arguments
+
+- `<runtime>` — The runtime environment to setup (e.g., `dart`).
+
+### Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--version <v>` | Version of the runtime to install | `latest` |
+| `--dry-run` | Simulate execution — no changes are made | `false` |
+| `--preset <p>` | Apply a configuration preset (if available for the runtime) | — |
+| `-h, --help` | Display help | — |
+
+### Dry run
+
+Preview what would happen without touching the system:
+
+```bash
+jules-env use dart --dry-run
+```
+
+## Available recipes
+
+| Runtime | Recipe | Install method | Description |
+|---------|--------|---------------|-------------|
+| Dart | `dart` | Homebrew | Installs the Dart SDK via `brew install dart-sdk` |
+
+## Installation
+
+### npm
+
+```bash
+npm install jules-env
+```
+
+### From source
+
+```bash
+git clone <repository_url>
+cd jules-env
+bun install
+bun run build
+```
+
 ## Development
 
-To run the integration tests:
+### Prerequisites
+
+- [Bun](https://bun.sh/)
+- [Homebrew](https://brew.sh/) (required for the Dart recipe)
+
+### Run tests
 
 ```bash
 bun test
 ```
+
+### Build
+
+```bash
+bun run build          # Build both Node.js bundle and Bun binary
+bun run build:node     # Node.js bundle only (dist/cli.mjs)
+bun run build:binary   # Standalone Bun binary only (jules-env)
+```
+
+### Type check
+
+```bash
+bun run typecheck
+```
+
+### Prepublish checks
+
+Run the full validation suite before publishing:
+
+```bash
+bun run check:all
+```
+
+This validates version, runs type checks, tests, builds both targets, and smoke-tests the outputs.
