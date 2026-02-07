@@ -47,14 +47,18 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
   }
 
   // 2. Files
-  for (const file of plan.files) {
-    if (dryRun) {
-       console.log(`[File] Write to ${file.path}:`);
-       console.log(file.content);
-    } else {
-       await mkdir(dirname(file.path), { recursive: true });
-       await writeFile(file.path, file.content);
+  if (dryRun) {
+    for (const file of plan.files) {
+      console.log(`[File] Write to ${file.path}:`);
+      console.log(file.content);
     }
+  } else {
+    await Promise.all(
+      plan.files.map(async (file) => {
+        await mkdir(dirname(file.path), { recursive: true });
+        await writeFile(file.path, file.content);
+      }),
+    );
   }
 
   // 3. State Persistence (.jules/shellenv)
