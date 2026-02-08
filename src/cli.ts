@@ -4,6 +4,7 @@ import { executePlan } from './core/executor';
 import { DartRecipe } from './recipes/dart';
 import { FlutterRecipe } from './recipes/flutter';
 import { RubyRecipe } from './recipes/ruby';
+import { PhpRecipe } from './recipes/php';
 import { loadDataRecipe } from './core/loader';
 import ollamaData from './recipes/ollama.json';
 import { z } from 'zod';
@@ -16,6 +17,7 @@ const recipes: Record<string, any> = {
   dart: DartRecipe,
   flutter: FlutterRecipe,
   ruby: RubyRecipe,
+  php: PhpRecipe,
   ollama: loadDataRecipe(ollamaData),
 };
 
