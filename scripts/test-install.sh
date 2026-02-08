@@ -20,9 +20,19 @@ verify_cmd() {
     dart)    echo 'dart --version' ;;
     flutter) echo 'flutter --version' ;;
     ruby)    echo 'ruby --version && gem --version' ;;
-    php)     echo 'php --version && composer --version' ;;
-    ollama)  echo 'ollama --version' ;;
-    *)       echo '' ;;
+    php)        echo 'php --version && composer --version' ;;
+    php-sqlite) echo 'php -m | grep -q sqlite3' ;;
+    laravel)    echo 'laravel --version' ;;
+    ollama)     echo 'ollama --version' ;;
+    *)          echo '' ;;
+  esac
+}
+
+prereq_cmd() {
+  case "$1" in
+    php-sqlite) echo 'jules-env use php' ;;
+    laravel)    echo 'jules-env use php && source ~/.jules/shellenv && jules-env use php-sqlite' ;;
+    *)          echo '' ;;
   esac
 }
 
@@ -43,7 +53,7 @@ for arg in "$@"; do
 done
 
 if [ ${#recipes[@]} -eq 0 ]; then
-  recipes=(dart flutter ruby php ollama)
+  recipes=(dart flutter ruby php php-sqlite laravel ollama)
 fi
 
 echo -e "${BOLD}Building Docker image...${RESET}"
@@ -66,7 +76,14 @@ for recipe in "${recipes[@]}"; do
   echo "  Install: $use_cmd"
   echo "  Verify:  $verify"
 
-  if docker run --rm "$IMAGE" bash -c "$use_cmd && source ~/.jules/shellenv && $verify"; then
+  prereq="$(prereq_cmd "$recipe")"
+  if [ -n "$prereq" ]; then
+    run_cmd="$prereq && $use_cmd && source ~/.jules/shellenv && $verify"
+  else
+    run_cmd="$use_cmd && source ~/.jules/shellenv && $verify"
+  fi
+
+  if docker run --rm "$IMAGE" bash -c "$run_cmd"; then
     echo -e "  ${GREEN}PASS${RESET} $recipe"
     pass=$((pass + 1))
   else
