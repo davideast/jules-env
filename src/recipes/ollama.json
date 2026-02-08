@@ -1,0 +1,39 @@
+{
+  "name": "ollama",
+  "description": "Ollama with configurable model",
+  "installSteps": [
+    {
+      "id": "install-zstd",
+      "label": "Install zstd",
+      "cmd": "sudo apt-get update && sudo apt-get install -y zstd",
+      "checkCmd": "dpkg -s zstd"
+    },
+    {
+      "id": "install-ollama",
+      "label": "Install Ollama",
+      "cmd": "curl -fsSL https://ollama.com/install.sh | sh",
+      "checkCmd": "which ollama"
+    },
+    {
+      "id": "enable-ollama",
+      "label": "Enable Ollama service",
+      "cmd": "sudo systemctl daemon-reload && sudo systemctl enable --now ollama",
+      "checkCmd": "systemctl is-active ollama"
+    },
+    {
+      "id": "wait-for-ollama",
+      "label": "Wait for Ollama to initialize",
+      "cmd": "sleep 5"
+    },
+    {
+      "id": "pull-model",
+      "label": "Pull {{preset}} model",
+      "cmd": "ollama pull {{preset}}",
+      "checkCmd": "ollama list | grep {{preset}}"
+    }
+  ],
+  "env": {
+    "OLLAMA_HOST": "http://localhost:11434"
+  },
+  "paths": []
+}

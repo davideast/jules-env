@@ -12,7 +12,7 @@ export const UseContextSchema = z.object({
 export type UseContext = z.infer<typeof UseContextSchema>;
 
 // 2. THE OUTPUT (The Plan)
-const ShellStepSchema = z.object({
+export const ShellStepSchema = z.object({
   id: z.string(),
   label: z.string(),
   cmd: z.string(),
@@ -30,6 +30,22 @@ export const ExecutionPlanSchema = z.object({
 });
 
 export type ExecutionPlan = z.infer<typeof ExecutionPlanSchema>;
+
+// 2b. DATA RECIPE (JSON-defined recipe)
+export const DataRecipeSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  defaultPreset: z.string().optional(),
+  installSteps: z.array(ShellStepSchema),
+  env: z.record(z.string()).default({}),
+  paths: z.array(z.string()).default([]),
+  files: z.array(z.object({
+    path: z.string(),
+    content: z.string(),
+  })).default([]),
+});
+
+export type DataRecipe = z.infer<typeof DataRecipeSchema>;
 
 // 3. THE BEHAVIOR (The Interface)
 export interface Recipe {
