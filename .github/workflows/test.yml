@@ -73,5 +73,5 @@ jobs:
       - name: Dry-run php-sqlite recipe
         run: docker run --rm jules-env jules-env use php-sqlite --dry-run
 
-      - name: Dry-run laravel recipe
+      - name: Dry-run laravel recipe (resolves php + php-sqlite deps)
         run: docker run --rm jules-env jules-env use laravel --dry-run

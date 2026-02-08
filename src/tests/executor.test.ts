@@ -3,7 +3,7 @@ import { executePlan } from '../core/executor';
 import { ExecutionPlanSchema } from '../core/spec';
 import { join } from 'node:path';
 import { tmpdir, homedir } from 'node:os';
-import { existsSync, unlinkSync, readFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { existsSync, unlinkSync, readFileSync, rmSync, mkdtempSync, mkdirSync, appendFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 
 describe("Executor", () => {
@@ -151,5 +151,53 @@ describe("Executor", () => {
             const homeStateFile = join(homedir(), '.jules', 'shellenv');
             if (existsSync(homeStateFile)) unlinkSync(homeStateFile);
         }
+    });
+
+    test("auto-sources .jules/shellenv before command", async () => {
+        const julesDir = join(homedir(), '.jules');
+        const stateFile = join(julesDir, 'shellenv');
+
+        // Ensure directory exists
+        if (!existsSync(julesDir)) mkdirSync(julesDir, { recursive: true });
+
+        // Add a test variable to shellenv
+        appendFileSync(stateFile, 'export JULES_TEST_VAR="sourced"\n');
+
+        const outputFile = join(tmpdir(), `jules-source-test-${Date.now()}.txt`);
+
+        const plan = ExecutionPlanSchema.parse({
+            installSteps: [{
+                id: 'test-source',
+                label: 'Test Sourcing',
+                cmd: `echo $JULES_TEST_VAR > ${outputFile}`,
+            }],
+            env: {},
+            paths: [],
+            files: [],
+        });
+
+        try {
+            await executePlan(plan, false);
+            expect(existsSync(outputFile)).toBe(true);
+            expect(readFileSync(outputFile, 'utf-8').trim()).toBe('sourced');
+        } finally {
+            if (existsSync(outputFile)) unlinkSync(outputFile);
+            // We don't delete shellenv here as other tests might rely on it or it might be the user's
+            // In a real environment we might want to backup/restore, but for now appending is safer than deleting
+        }
+    });
+
+    // NOTE: Testing stdout capture in this environment is tricky without spawning a child process for the test itself.
+    // However, we can verify that the label parameter is accepted and doesn't crash.
+    test("accepts label parameter", async () => {
+         const plan = ExecutionPlanSchema.parse({
+            installSteps: [],
+            env: {},
+            paths: [],
+            files: [],
+        });
+
+        // Should not throw
+        await executePlan(plan, true, "My Label");
     });
 });

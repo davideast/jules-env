@@ -4,9 +4,11 @@ import { mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { homedir } from 'node:os';
 
-export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
+const SHELLENV_SOURCE = '. $HOME/.jules/shellenv 2>/dev/null; ';
+
+export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: string) {
   if (dryRun) {
-    console.log("--- DRY RUN: Execution Plan ---");
+    console.log(`--- DRY RUN: ${label ?? 'Execution Plan'} ---`);
   }
 
   // 1. Install Steps
@@ -22,7 +24,9 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
 
       let skip = false;
       if (step.checkCmd) {
-        const check = spawn('sh', ['-c', step.checkCmd], {
+        // Auto-source shellenv for checkCmd
+        const fullCheckCmd = `${SHELLENV_SOURCE}${step.checkCmd}`;
+        const check = spawn('sh', ['-c', fullCheckCmd], {
           stdio: 'ignore',
         });
         const exitCode = await new Promise<number>((res) => check.on('close', (code) => res(code ?? 1)));
@@ -33,7 +37,9 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
       }
 
       if (!skip) {
-        const proc = spawn('sh', ['-c', step.cmd], {
+        // Auto-source shellenv for cmd
+        const fullCmd = `${SHELLENV_SOURCE}${step.cmd}`;
+        const proc = spawn('sh', ['-c', fullCmd], {
           stdio: 'inherit',
         });
         const exitCode = await new Promise<number>((res) => proc.on('close', (code) => res(code ?? 1)));

@@ -22,6 +22,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
 export const PhpSqliteRecipe: Recipe = {
   name: 'php-sqlite',
   description: 'PHP SQLite extension',
+  depends: ['php'],
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':

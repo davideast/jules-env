@@ -51,6 +51,7 @@ export type DataRecipe = z.infer<typeof DataRecipeSchema>;
 export interface Recipe {
   name: string;
   description: string;
+  depends?: string[];
   /**
    * Logic engine. Must be Read-Only.
    * Can probe system (e.g. `brew --prefix`) but MUST NOT install software.
