@@ -20,6 +20,7 @@ verify_cmd() {
     dart)    echo 'dart --version' ;;
     flutter) echo 'flutter --version' ;;
     ruby)    echo 'ruby --version && gem --version' ;;
+    php)     echo 'php --version && composer --version' ;;
     ollama)  echo 'ollama --version' ;;
     *)       echo '' ;;
   esac
@@ -42,7 +43,7 @@ for arg in "$@"; do
 done
 
 if [ ${#recipes[@]} -eq 0 ]; then
-  recipes=(dart flutter ruby ollama)
+  recipes=(dart flutter ruby php ollama)
 fi
 
 echo -e "${BOLD}Building Docker image...${RESET}"

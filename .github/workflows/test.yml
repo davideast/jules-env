@@ -66,3 +66,6 @@ jobs:
 
       - name: Dry-run ruby recipe
         run: docker run --rm jules-env jules-env use ruby --dry-run
+
+      - name: Dry-run php recipe
+        run: docker run --rm jules-env jules-env use php --dry-run
