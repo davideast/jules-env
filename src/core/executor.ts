@@ -21,8 +21,7 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
 
       let skip = false;
       if (step.checkCmd) {
-        const checkParts = step.checkCmd.split(' ');
-        const check = spawn(checkParts[0]!, checkParts.slice(1), {
+        const check = spawn('sh', ['-c', step.checkCmd], {
           stdio: 'ignore',
         });
         const exitCode = await new Promise<number>((res) => check.on('close', (code) => res(code ?? 1)));
@@ -33,8 +32,7 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
       }
 
       if (!skip) {
-        const cmdParts = step.cmd.split(' ');
-        const proc = spawn(cmdParts[0]!, cmdParts.slice(1), {
+        const proc = spawn('sh', ['-c', step.cmd], {
           stdio: 'inherit',
         });
         const exitCode = await new Promise<number>((res) => proc.on('close', (code) => res(code ?? 1)));

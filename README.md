@@ -23,6 +23,10 @@ Wrote .jules/shellenv
 2. **Plan** — The recipe produces an execution plan: shell commands to run, environment variables to set, and paths to prepend.
 3. **Execute** — The plan runs. Install steps that are already satisfied (checked via an optional `checkCmd`) are skipped. State is persisted to `.jules/shellenv`.
 
+### Data recipes
+
+Recipes can also be defined as JSON files. A data recipe is a static execution plan — no system probing, no dynamic resolution. This makes them easy to generate programmatically (e.g., by an LLM). Data recipes are validated against a Zod schema at load time. See `src/recipes/ollama.json` for an example.
+
 ## Shell environment
 
 After execution, `.jules/shellenv` contains the environment your runtime needs:
@@ -69,9 +73,10 @@ jules-env use dart --dry-run
 
 ## Available recipes
 
-| Runtime | Recipe | Install method | Description |
-|---------|--------|---------------|-------------|
-| Dart | `dart` | Homebrew | Installs the Dart SDK via `brew install dart-sdk` |
+| Runtime | Recipe | Type | Description |
+|---------|--------|------|-------------|
+| Dart | `dart` | Code | Installs the Dart SDK (Homebrew on macOS, apt on Linux) |
+| Ollama | `ollama` | Data | Installs Ollama with EmbeddingGemma model |
 
 ## Installation
 
@@ -95,7 +100,7 @@ bun run build
 ### Prerequisites
 
 - [Bun](https://bun.sh/)
-- [Homebrew](https://brew.sh/) (required for the Dart recipe)
+- [Homebrew](https://brew.sh/) (macOS only, used by Dart recipe)
 
 ### Run tests
 
