@@ -2,6 +2,7 @@ import type { ExecutionPlan } from './spec';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
+import { homedir } from 'node:os';
 
 export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
   if (dryRun) {
@@ -60,7 +61,7 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
   }
 
   // 3. State Persistence (.jules/shellenv)
-  const julesDir = resolve(process.cwd(), '.jules');
+  const julesDir = resolve(homedir(), '.jules');
   const stateFile = resolve(julesDir, 'shellenv');
   let stateContent = '';
 
@@ -74,13 +75,13 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean) {
   }
 
   if (dryRun) {
-    console.log(`[State] Append to .jules/shellenv:`);
+    console.log(`[State] Append to ~/.jules/shellenv:`);
     console.log(stateContent);
   } else {
     if (stateContent) {
       await mkdir(julesDir, { recursive: true });
       await appendFile(stateFile, stateContent);
-      console.log(`Updated .jules/shellenv`);
+      console.log(`Updated ~/.jules/shellenv`);
     }
   }
 }
