@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { UseContextSchema } from './core/spec';
 import { executePlan } from './core/executor';
 import { DartRecipe } from './recipes/dart';
+import { FlutterRecipe } from './recipes/flutter';
 import { loadDataRecipe } from './core/loader';
 import ollamaData from './recipes/ollama.json';
 import { z } from 'zod';
@@ -12,6 +13,7 @@ const program = new Command();
 // Registry of recipes (simple map for now)
 const recipes: Record<string, any> = {
   dart: DartRecipe,
+  flutter: FlutterRecipe,
   ollama: loadDataRecipe(ollamaData),
 };
 
