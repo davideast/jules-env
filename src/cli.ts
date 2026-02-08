@@ -5,6 +5,8 @@ import { DartRecipe } from './recipes/dart';
 import { FlutterRecipe } from './recipes/flutter';
 import { RubyRecipe } from './recipes/ruby';
 import { PhpRecipe } from './recipes/php';
+import { PhpSqliteRecipe } from './recipes/php-sqlite';
+import { LaravelRecipe } from './recipes/laravel';
 import { loadDataRecipe } from './core/loader';
 import ollamaData from './recipes/ollama.json';
 import { z } from 'zod';
@@ -18,6 +20,8 @@ const recipes: Record<string, any> = {
   flutter: FlutterRecipe,
   ruby: RubyRecipe,
   php: PhpRecipe,
+  'php-sqlite': PhpSqliteRecipe,
+  laravel: LaravelRecipe,
   ollama: loadDataRecipe(ollamaData),
 };
 
