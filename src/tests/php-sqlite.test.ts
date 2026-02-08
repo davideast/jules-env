@@ -8,6 +8,10 @@ describe("Integration: PHP SQLite Recipe", () => {
     dryRun: true,
   });
 
+  test("declares depends on php", () => {
+    expect(PhpSqliteRecipe.depends).toEqual(['php']);
+  });
+
   test("plan validates against ExecutionPlanSchema", async () => {
     const plan = await PhpSqliteRecipe.resolve(context);
     const parsed = ExecutionPlanSchema.parse(plan);

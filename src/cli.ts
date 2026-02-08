@@ -1,6 +1,8 @@
 import { Command } from 'commander';
 import { UseContextSchema } from './core/spec';
 import { executePlan } from './core/executor';
+import { resolveDependencies, CircularDependencyError, MissingDependencyError } from './core/resolver';
+import type { Recipe } from './core/spec';
 import { DartRecipe } from './recipes/dart';
 import { FlutterRecipe } from './recipes/flutter';
 import { RubyRecipe } from './recipes/ruby';
@@ -15,7 +17,7 @@ import pkg from '../package.json';
 const program = new Command();
 
 // Registry of recipes (simple map for now)
-const recipes: Record<string, any> = {
+const recipes: Record<string, Recipe> = {
   dart: DartRecipe,
   flutter: FlutterRecipe,
   ruby: RubyRecipe,
@@ -38,33 +40,40 @@ program
   .option('--preset <p>', 'Configuration preset')
   .action(async (runtime, options) => {
     try {
-      // 1. Look up recipe
-      const recipe = recipes[runtime];
-      if (!recipe) {
-        console.error(`Error: Recipe for '${runtime}' not found.`);
-        process.exit(1);
-      }
-
-      // 2. Parse Context
+      // 1. Parse Context (for the main target)
       const context = UseContextSchema.parse({
         runtime,
         version: options.version,
         preset: options.preset,
         dryRun: options.dryRun,
-        // options: ... (passed via remaining args if we supported that)
       });
 
-      console.log(`[jules-env] Resolving plan for ${runtime}...`);
+      // 2. Resolve Dependencies
+      const order = resolveDependencies(runtime, recipes);
+      if (order.length > 1) {
+        console.log(`[jules-env] Resolving dependencies: ${order.join(' -> ')}`);
+      }
 
-      // 3. Resolve Plan
-      const plan = await recipe.resolve(context);
+      // 3. Execute Chain
+      for (const recipeName of order) {
+        const recipe = recipes[recipeName]!;
 
-      // 4. Execute Plan
-      await executePlan(plan, context.dryRun);
+        // Dependencies get a neutral context (no preset/version)
+        // Only the target runtime gets the user-specified version/preset
+        const depContext = recipeName === runtime
+          ? context
+          : UseContextSchema.parse({ runtime: recipeName, dryRun: context.dryRun });
+
+        console.log(`[jules-env] Resolving plan for ${recipeName}...`);
+        const plan = await recipe.resolve(depContext);
+        await executePlan(plan, context.dryRun, recipeName);
+      }
 
     } catch (err) {
       if (err instanceof z.ZodError) {
         console.error("Validation Error:", err.errors);
+      } else if (err instanceof CircularDependencyError || err instanceof MissingDependencyError) {
+        console.error("Dependency Error:", err.message);
       } else {
         console.error("Error:", err);
       }

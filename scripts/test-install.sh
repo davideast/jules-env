@@ -28,14 +28,6 @@ verify_cmd() {
   esac
 }
 
-prereq_cmd() {
-  case "$1" in
-    php-sqlite) echo 'jules-env use php' ;;
-    laravel)    echo 'jules-env use php && source ~/.jules/shellenv && jules-env use php-sqlite' ;;
-    *)          echo '' ;;
-  esac
-}
-
 # Split args on "--": recipes before, extra flags after
 recipes=()
 extra_flags=""
@@ -76,12 +68,7 @@ for recipe in "${recipes[@]}"; do
   echo "  Install: $use_cmd"
   echo "  Verify:  $verify"
 
-  prereq="$(prereq_cmd "$recipe")"
-  if [ -n "$prereq" ]; then
-    run_cmd="$prereq && $use_cmd && source ~/.jules/shellenv && $verify"
-  else
-    run_cmd="$use_cmd && source ~/.jules/shellenv && $verify"
-  fi
+  run_cmd="$use_cmd && source ~/.jules/shellenv && $verify"
 
   if docker run --rm "$IMAGE" bash -c "$run_cmd"; then
     echo -e "  ${GREEN}PASS${RESET} $recipe"

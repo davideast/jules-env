@@ -8,6 +8,10 @@ describe("Integration: Laravel Recipe", () => {
     dryRun: true,
   });
 
+  test("declares depends on php-sqlite", () => {
+    expect(LaravelRecipe.depends).toEqual(['php-sqlite']);
+  });
+
   test("resolves plan with 1 install step", async () => {
     const plan = await LaravelRecipe.resolve(context);
     expect(plan.installSteps).toHaveLength(1);
@@ -63,10 +67,22 @@ describe("Integration: Laravel Recipe", () => {
     expect(step?.cmd).toContain('composer global require laravel/installer');
   });
 
+  test("cmd does not contain manual shellenv sourcing", async () => {
+    const plan = await LaravelRecipe.resolve(context);
+    const step = plan.installSteps.find(s => s.id === 'install-laravel-installer');
+    expect(step?.cmd).not.toContain('.jules/shellenv');
+  });
+
   test("install step checkCmd contains laravel --version", async () => {
     const plan = await LaravelRecipe.resolve(context);
     const step = plan.installSteps.find(s => s.id === 'install-laravel-installer');
     expect(step?.checkCmd).toContain('laravel --version');
+  });
+
+  test("checkCmd does not contain manual shellenv sourcing", async () => {
+    const plan = await LaravelRecipe.resolve(context);
+    const step = plan.installSteps.find(s => s.id === 'install-laravel-installer');
+    expect(step?.checkCmd).not.toContain('.jules/shellenv');
   });
 
   if (process.platform === 'darwin') {
