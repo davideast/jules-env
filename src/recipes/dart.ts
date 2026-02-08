@@ -52,7 +52,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'add-dart-repo',
       label: 'Add Dart repository',
-      cmd: "echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/dart-archive/channels/stable/release/latest/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list > /dev/null",
+      cmd: "echo 'deb [signed-by=/usr/share/keyrings/dart.gpg arch=amd64] https://storage.googleapis.com/download.dartlang.org/linux/debian stable main' | sudo tee /etc/apt/sources.list.d/dart_stable.list > /dev/null",
       checkCmd: 'test -f /etc/apt/sources.list.d/dart_stable.list',
     },
     {
