@@ -35,5 +35,8 @@
     "check:all": "bun run scripts/prepublish-checks.ts",
     "prepack": "bun run scripts/prepublish-checks.ts",
     "docker": "docker build -t jules-env . && docker run --rm -it jules-env"
+  },
+  "np": {
+    "2fa": false
   }
 }
