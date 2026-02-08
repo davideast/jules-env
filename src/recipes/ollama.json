@@ -17,13 +17,13 @@
     {
       "id": "enable-ollama",
       "label": "Enable Ollama service",
-      "cmd": "sudo systemctl daemon-reload && sudo systemctl enable --now ollama",
-      "checkCmd": "systemctl is-active ollama"
+      "cmd": "if command -v systemctl >/dev/null 2>&1; then sudo systemctl daemon-reload && sudo systemctl enable --now ollama; else nohup ollama serve > /tmp/ollama.log 2>&1 & fi",
+      "checkCmd": "curl -sf http://localhost:11434/ >/dev/null 2>&1"
     },
     {
       "id": "wait-for-ollama",
       "label": "Wait for Ollama to initialize",
-      "cmd": "sleep 5"
+      "cmd": "for i in 1 2 3 4 5 6 7 8 9 10; do curl -sf http://localhost:11434/ >/dev/null 2>&1 && exit 0; sleep 1; done; echo 'Ollama server did not start'; exit 1"
     },
     {
       "id": "pull-model",

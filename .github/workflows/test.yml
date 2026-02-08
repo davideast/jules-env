@@ -63,3 +63,6 @@ jobs:
 
       - name: Dry-run dart recipe
         run: docker run --rm jules-env jules-env use dart --dry-run
+
+      - name: Dry-run ruby recipe
+        run: docker run --rm jules-env jules-env use ruby --dry-run
