@@ -65,7 +65,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'clone-flutter',
       label: 'Clone Flutter SDK',
-      cmd: 'git clone -b stable https://github.com/flutter/flutter.git /usr/local/flutter',
+      cmd: 'sudo git clone -b stable https://github.com/flutter/flutter.git /usr/local/flutter && sudo chown -R $(id -u):$(id -g) /usr/local/flutter',
       checkCmd: 'test -d /usr/local/flutter',
     },
     {

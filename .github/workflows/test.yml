@@ -41,3 +41,25 @@ jobs:
 
       - name: Tarball validation
         run: npm pack --dry-run
+
+  docker-test:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t jules-env .
+
+      - name: Verify CLI runs
+        run: docker run --rm jules-env jules-env --help
+
+      - name: Verify user is non-root
+        run: docker run --rm jules-env bash -c 'test "$(id -u)" = "1001"'
+
+      - name: Dry-run flutter recipe
+        run: docker run --rm jules-env jules-env use flutter --dry-run
+
+      - name: Dry-run dart recipe
+        run: docker run --rm jules-env jules-env use dart --dry-run

@@ -1,6 +1,6 @@
 {
   "name": "@_davideast/jules-env",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Configure ephemeral development environments",
   "license": "Apache-2.0",
   "type": "module",

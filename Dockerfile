@@ -18,4 +18,10 @@ RUN chmod +x /opt/jules-env/bin/jules-env
 
 ENV PATH="/opt/jules-env/bin:$PATH"
 
+# Run as non-root user to match the Jules VM environment
+RUN useradd -m -s /bin/bash -u 1001 jules && \
+    echo 'jules ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+USER jules
+WORKDIR /home/jules
+
 CMD ["/bin/bash"]
