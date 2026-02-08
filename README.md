@@ -10,7 +10,7 @@ That's it. The runtime is installed, environment variables are set, and your she
 
 ```
 ✔ brew install dart-sdk
-Wrote .jules/shellenv
+Wrote ~/.jules/shellenv
   export PATH="/opt/homebrew/opt/dart-sdk/bin:$PATH"
   export DART_SDK="/opt/homebrew/opt/dart-sdk/libexec"
 ```
@@ -21,7 +21,7 @@ Wrote .jules/shellenv
 
 1. **Recipe** — A recipe describes how to install a runtime. It probes the system (e.g., `brew --prefix dart-sdk`) but never modifies it.
 2. **Plan** — The recipe produces an execution plan: shell commands to run, environment variables to set, and paths to prepend.
-3. **Execute** — The plan runs. Install steps that are already satisfied (checked via an optional `checkCmd`) are skipped. State is persisted to `.jules/shellenv`.
+3. **Execute** — The plan runs. Install steps that are already satisfied (checked via an optional `checkCmd`) are skipped. State is persisted to `~/.jules/shellenv`.
 
 ### Data recipes
 
@@ -29,7 +29,7 @@ Recipes can also be defined as JSON files. A data recipe is a static execution p
 
 ## Shell environment
 
-After execution, `.jules/shellenv` contains the environment your runtime needs:
+After execution, `~/.jules/shellenv` contains the environment your runtime needs:
 
 ```bash
 export PATH="/opt/homebrew/opt/dart-sdk/bin:$PATH"
@@ -39,7 +39,7 @@ export DART_SDK="/opt/homebrew/opt/dart-sdk/libexec"
 Source it to activate:
 
 ```bash
-source .jules/shellenv
+source ~/.jules/shellenv
 ```
 
 The file is appended to on subsequent runs, so multiple runtimes compose cleanly.
