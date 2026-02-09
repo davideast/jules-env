@@ -59,7 +59,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-flutter-prereqs',
       label: 'Install prerequisites',
-      cmd: 'sudo apt-get update && sudo apt-get install -y curl git unzip xz-utils',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y curl git unzip xz-utils',
       checkCmd: 'dpkg -s curl && dpkg -s git && dpkg -s unzip && dpkg -s xz-utils',
     },
     {

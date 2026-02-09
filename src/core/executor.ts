@@ -4,7 +4,7 @@ import { mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { homedir } from 'node:os';
 
-const SHELLENV_SOURCE = '. $HOME/.jules/shellenv 2>/dev/null; ';
+const SHELLENV_SOURCE = 'test -f $HOME/.jules/shellenv && . $HOME/.jules/shellenv; ';
 
 export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: string) {
   if (dryRun) {

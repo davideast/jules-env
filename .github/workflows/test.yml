@@ -55,6 +55,9 @@ jobs:
       - name: Verify CLI runs
         run: docker run --rm jules-env jules-env --help
 
+      - name: Verify Ubuntu base
+        run: docker run --rm jules-env bash -c 'grep -q "Ubuntu" /etc/os-release'
+
       - name: Verify user is non-root
         run: docker run --rm jules-env bash -c 'test "$(id -u)" = "1001"'
 
@@ -75,3 +78,26 @@ jobs:
 
       - name: Dry-run laravel recipe (resolves php + php-sqlite deps)
         run: docker run --rm jules-env jules-env use laravel --dry-run
+
+  docker-install-test:
+    needs: docker-test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe:
+          - name: ruby
+            verify: "ruby --version && gem --version"
+          - name: php
+            verify: "php --version && composer --version"
+          - name: dart
+            verify: "dart --version"
+          - name: laravel
+            verify: "laravel --version"
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t jules-env .
+      - name: Install and verify ${{ matrix.recipe.name }}
+        run: |
+          docker run --rm jules-env bash -c \
+            "jules-env use ${{ matrix.recipe.name }} && source ~/.jules/shellenv && ${{ matrix.recipe.verify }}"

@@ -40,7 +40,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-dart-prereqs',
       label: 'Install prerequisites',
-      cmd: 'sudo apt-get update && sudo apt-get install -y apt-transport-https wget',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y apt-transport-https wget',
       checkCmd: 'dpkg -s apt-transport-https && dpkg -s wget',
     },
     {
@@ -58,7 +58,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-dart',
       label: 'Install Dart SDK',
-      cmd: 'sudo apt-get update && sudo apt-get install -y dart',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y dart',
       checkCmd: 'dpkg -s dart',
     },
   ];

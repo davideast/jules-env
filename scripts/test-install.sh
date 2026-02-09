@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Manual local test: fully installs each recipe in Docker and verifies it works.
-# Usage: ./scripts/test-install.sh [recipe...] [-- extra-flags]
+# Usage: ./scripts/test-install.sh [--no-build] [recipe...] [-- extra-flags]
 # Examples:
 #   ./scripts/test-install.sh              # test all recipes
 #   ./scripts/test-install.sh ruby         # test only ruby
 #   ./scripts/test-install.sh dart ruby    # test dart and ruby
+#   ./scripts/test-install.sh --no-build ruby  # skip image build
 #   ./scripts/test-install.sh ollama -- --preset gemma3  # pass flags to jules-env
 set -euo pipefail
 
@@ -14,6 +15,8 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 IMAGE="jules-env"
+NO_BUILD=false
+TIMEOUT=300
 
 verify_cmd() {
   case "$1" in
@@ -39,6 +42,8 @@ for arg in "$@"; do
   fi
   if $seen_separator; then
     extra_flags="$extra_flags $arg"
+  elif [ "$arg" = "--no-build" ]; then
+    NO_BUILD=true
   else
     recipes+=("$arg")
   fi
@@ -46,11 +51,17 @@ done
 
 if [ ${#recipes[@]} -eq 0 ]; then
   recipes=(dart flutter ruby php php-sqlite laravel ollama)
+  # Skip slow/complex recipes in CI
+  if [ "${CI:-}" = "true" ]; then
+    recipes=(dart ruby php php-sqlite laravel)
+  fi
 fi
 
-echo -e "${BOLD}Building Docker image...${RESET}"
-docker build -t "$IMAGE" .
-echo ""
+if [ "$NO_BUILD" = false ]; then
+  echo -e "${BOLD}Building Docker image...${RESET}"
+  docker build -t "$IMAGE" .
+  echo ""
+fi
 
 pass=0
 fail=0
@@ -70,7 +81,7 @@ for recipe in "${recipes[@]}"; do
 
   run_cmd="$use_cmd && source ~/.jules/shellenv && $verify"
 
-  if docker run --rm "$IMAGE" bash -c "$run_cmd"; then
+  if timeout "$TIMEOUT" docker run --rm "$IMAGE" bash -c "$run_cmd"; then
     echo -e "  ${GREEN}PASS${RESET} $recipe"
     pass=$((pass + 1))
   else

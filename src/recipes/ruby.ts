@@ -41,7 +41,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-ruby-prereqs',
       label: 'Install build prerequisites',
-      cmd: 'sudo apt-get update && sudo apt-get install -y build-essential',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y build-essential',
       checkCmd: 'dpkg -s build-essential',
     },
     {

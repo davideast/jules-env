@@ -11,7 +11,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-php-sqlite',
       label: 'Install PHP SQLite extension',
-      cmd: 'sudo apt-get update && sudo apt-get install -y php-sqlite3',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y php-sqlite3',
       checkCmd: 'dpkg -s php-sqlite3',
     },
   ];
