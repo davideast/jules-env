@@ -187,6 +187,88 @@ describe("Executor", () => {
         }
     });
 
+    test("checkCmd skips step when check passes", async () => {
+        const markerFile = join(tmpdir(), `jules-checkskip-${Date.now()}.txt`);
+
+        const plan = ExecutionPlanSchema.parse({
+            installSteps: [{
+                id: 'should-skip',
+                label: 'Should be skipped',
+                cmd: `echo ran > ${markerFile}`,
+                checkCmd: 'true',
+            }],
+            env: {},
+            paths: [],
+            files: [],
+        });
+
+        await executePlan(plan, false);
+
+        // cmd should NOT have run because checkCmd exited 0
+        expect(existsSync(markerFile)).toBe(false);
+    });
+
+    test("checkCmd runs step when check fails", async () => {
+        const markerFile = join(tmpdir(), `jules-checkfail-${Date.now()}.txt`);
+
+        const plan = ExecutionPlanSchema.parse({
+            installSteps: [{
+                id: 'should-run',
+                label: 'Should run',
+                cmd: `echo ran > ${markerFile}`,
+                checkCmd: 'false',
+            }],
+            env: {},
+            paths: [],
+            files: [],
+        });
+
+        try {
+            await executePlan(plan, false);
+            expect(existsSync(markerFile)).toBe(true);
+        } finally {
+            if (existsSync(markerFile)) unlinkSync(markerFile);
+        }
+    });
+
+    test("checkCmd works when shellenv does not exist", async () => {
+        const julesDir = join(homedir(), '.jules');
+        const stateFile = join(julesDir, 'shellenv');
+        const markerFile = join(tmpdir(), `jules-noenv-${Date.now()}.txt`);
+
+        // Temporarily remove shellenv if it exists
+        let backup: string | null = null;
+        if (existsSync(stateFile)) {
+            backup = readFileSync(stateFile, 'utf-8');
+            unlinkSync(stateFile);
+        }
+
+        const plan = ExecutionPlanSchema.parse({
+            installSteps: [{
+                id: 'check-without-shellenv',
+                label: 'Check without shellenv',
+                cmd: `echo ran > ${markerFile}`,
+                checkCmd: 'true',
+            }],
+            env: {},
+            paths: [],
+            files: [],
+        });
+
+        try {
+            await executePlan(plan, false);
+            // checkCmd should have succeeded (exited 0), so cmd should NOT run
+            expect(existsSync(markerFile)).toBe(false);
+        } finally {
+            // Restore shellenv
+            if (backup !== null) {
+                if (!existsSync(julesDir)) mkdirSync(julesDir, { recursive: true });
+                appendFileSync(stateFile, backup);
+            }
+            if (existsSync(markerFile)) unlinkSync(markerFile);
+        }
+    });
+
     // NOTE: Testing stdout capture in this environment is tricky without spawning a child process for the test itself.
     // However, we can verify that the label parameter is accepted and doesn't crash.
     test("accepts label parameter", async () => {

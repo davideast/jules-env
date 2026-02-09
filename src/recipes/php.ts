@@ -49,7 +49,7 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-php',
       label: 'Install PHP',
-      cmd: 'sudo apt-get update && sudo apt-get install -y php-cli php-common php-mbstring php-xml php-curl php-zip unzip',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y php-cli php-common php-mbstring php-xml php-curl php-zip unzip',
       checkCmd: 'dpkg -s php-cli',
     },
     {

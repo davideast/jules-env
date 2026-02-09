@@ -5,7 +5,7 @@
     {
       "id": "install-zstd",
       "label": "Install zstd",
-      "cmd": "sudo apt-get update && sudo apt-get install -y zstd",
+      "cmd": "(sudo apt-get update || true) && sudo apt-get install -y zstd",
       "checkCmd": "dpkg -s zstd"
     },
     {

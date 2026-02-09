@@ -3,9 +3,10 @@ WORKDIR /app
 COPY . .
 RUN bun install && bun run build
 
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates git sudo && \
+    curl ca-certificates git sudo gnupg wget && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Bun runtime (needed by bin/jules-env shim)
