@@ -24,10 +24,17 @@ describe("Integration: MySQL Recipe", () => {
     }
   });
 
-  test("sets MYSQL_HOST env var to 127.0.0.1", async () => {
-    const plan = await MysqlRecipe.resolve(context);
-    expect(plan.env['MYSQL_HOST']).toBe('127.0.0.1');
-  });
+  if (process.platform === 'darwin') {
+    test("sets MYSQL_HOST env var to 127.0.0.1", async () => {
+      const plan = await MysqlRecipe.resolve(context);
+      expect(plan.env['MYSQL_HOST']).toBe('127.0.0.1');
+    });
+  } else {
+    test("does not set MYSQL_HOST env var on Linux (uses socket)", async () => {
+      const plan = await MysqlRecipe.resolve(context);
+      expect(plan.env['MYSQL_HOST']).toBeUndefined();
+    });
+  }
 
   test("paths is empty", async () => {
     const plan = await MysqlRecipe.resolve(context);

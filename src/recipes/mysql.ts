@@ -80,9 +80,7 @@ fi`,
     });
   }
 
-  const env = {
-    MYSQL_HOST: '127.0.0.1',
-  };
+  const env = {};
 
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
 }
