@@ -89,6 +89,13 @@ describe("Integration: MySQL Recipe", () => {
     expect(createStep?.checkCmd).toContain('testdb');
   });
 
+  test("with preset, create-database cmd uses single quotes for SQL", async () => {
+    const plan = await MysqlRecipe.resolve(contextWithPreset);
+    const createStep = plan.installSteps.find(s => s.id === 'create-database');
+    // Must use single quotes so backticks aren't interpreted as command substitution by sh
+    expect(createStep?.cmd).toMatch(/mariadb.*-e '.*`testdb`.*'/);
+  });
+
   if (process.platform === 'darwin') {
     test("macOS: 3 steps without preset", async () => {
       const plan = await MysqlRecipe.resolve(context);

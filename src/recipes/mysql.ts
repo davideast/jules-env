@@ -26,7 +26,7 @@ async function resolveDarwin(ctx: UseContext): Promise<ExecutionPlan> {
     installSteps.push({
       id: 'create-database',
       label: `Create database '${ctx.preset}'`,
-      cmd: `mariadb -u root -e "CREATE DATABASE IF NOT EXISTS \`${ctx.preset}\`"`,
+      cmd: `mariadb -u root -e 'CREATE DATABASE IF NOT EXISTS \`${ctx.preset}\`'`,
       checkCmd: `mariadb -u root -e "SHOW DATABASES" | grep -q "^${ctx.preset}$"`,
     });
   }
@@ -75,7 +75,7 @@ fi`,
     installSteps.push({
       id: 'create-database',
       label: `Create database '${ctx.preset}'`,
-      cmd: `mariadb -e "CREATE DATABASE IF NOT EXISTS \`${ctx.preset}\`"`,
+      cmd: `mariadb -e 'CREATE DATABASE IF NOT EXISTS \`${ctx.preset}\`'`,
       checkCmd: `mariadb -e "SHOW DATABASES" | grep -q "^${ctx.preset}$"`,
     });
   }

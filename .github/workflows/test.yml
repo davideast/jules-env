@@ -102,6 +102,8 @@ jobs:
             verify: "laravel --version"
           - name: mysql
             verify: "mariadb -e 'SELECT 1'"
+          - name: mysql --preset testdb
+            verify: "mariadb -e 'SHOW DATABASES' | grep testdb"
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t jules-env .
