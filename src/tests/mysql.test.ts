@@ -25,12 +25,14 @@ describe("Integration: MySQL Recipe", () => {
   });
 
   if (process.platform === 'darwin') {
-    test("sets MYSQL_HOST env var to 127.0.0.1", async () => {
+    test("macOS: sets MYSQL_HOST env var to 127.0.0.1", async () => {
       const plan = await MysqlRecipe.resolve(context);
       expect(plan.env['MYSQL_HOST']).toBe('127.0.0.1');
     });
-  } else {
-    test("sets MYSQL_HOST env var to localhost on Linux (implies socket)", async () => {
+  }
+
+  if (process.platform === 'linux') {
+    test("linux: sets MYSQL_HOST env var to localhost (implies socket)", async () => {
       const plan = await MysqlRecipe.resolve(context);
       expect(plan.env['MYSQL_HOST']).toBe('localhost');
     });
@@ -52,6 +54,15 @@ describe("Integration: MySQL Recipe", () => {
     const waitStep = plan.installSteps.find(s => s.id === 'wait-for-mariadb');
     expect(waitStep).toBeDefined();
     expect(waitStep?.checkCmd).toBeUndefined();
+  });
+
+  test("all steps except wait-for-mariadb have a checkCmd", async () => {
+    const plan = await MysqlRecipe.resolve(context);
+    for (const step of plan.installSteps) {
+      if (step.id === 'wait-for-mariadb') continue;
+      expect(step.checkCmd).toBeDefined();
+      expect(typeof step.checkCmd).toBe('string');
+    }
   });
 
   test("does not set DART_SDK, FLUTTER_ROOT, GEM_HOME, COMPOSER_HOME", async () => {
