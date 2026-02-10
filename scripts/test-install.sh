@@ -25,6 +25,7 @@ verify_cmd() {
     ruby)    echo 'ruby --version && gem --version' ;;
     php)        echo 'php --version && composer --version' ;;
     php-sqlite) echo 'php -m | grep -q sqlite3' ;;
+    mysql)      echo 'mariadb -e "SELECT 1"' ;;
     laravel)    echo 'laravel --version' ;;
     ollama)     echo 'ollama --version' ;;
     *)          echo '' ;;
@@ -50,10 +51,10 @@ for arg in "$@"; do
 done
 
 if [ ${#recipes[@]} -eq 0 ]; then
-  recipes=(dart flutter ruby php php-sqlite laravel ollama)
+  recipes=(dart flutter ruby php php-sqlite mysql laravel ollama)
   # Skip slow/complex recipes in CI
   if [ "${CI:-}" = "true" ]; then
-    recipes=(dart ruby php php-sqlite laravel)
+    recipes=(dart ruby php php-sqlite mysql laravel)
   fi
 fi
 

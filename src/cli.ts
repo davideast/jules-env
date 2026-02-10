@@ -8,6 +8,7 @@ import { FlutterRecipe } from './recipes/flutter';
 import { RubyRecipe } from './recipes/ruby';
 import { PhpRecipe } from './recipes/php';
 import { PhpSqliteRecipe } from './recipes/php-sqlite';
+import { MysqlRecipe } from './recipes/mysql';
 import { LaravelRecipe } from './recipes/laravel';
 import { loadDataRecipe } from './core/loader';
 import ollamaData from './recipes/ollama.json';
@@ -23,6 +24,7 @@ const recipes: Record<string, Recipe> = {
   ruby: RubyRecipe,
   php: PhpRecipe,
   'php-sqlite': PhpSqliteRecipe,
+  mysql: MysqlRecipe,
   laravel: LaravelRecipe,
   ollama: loadDataRecipe(ollamaData),
 };
