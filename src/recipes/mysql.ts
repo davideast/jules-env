@@ -80,7 +80,10 @@ fi`,
     });
   }
 
-  const env = {};
+  const env = {
+    // localhost implies socket connection on Linux clients
+    MYSQL_HOST: 'localhost',
+  };
 
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
 }

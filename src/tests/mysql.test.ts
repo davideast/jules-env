@@ -30,9 +30,9 @@ describe("Integration: MySQL Recipe", () => {
       expect(plan.env['MYSQL_HOST']).toBe('127.0.0.1');
     });
   } else {
-    test("does not set MYSQL_HOST env var on Linux (uses socket)", async () => {
+    test("sets MYSQL_HOST env var to localhost on Linux (implies socket)", async () => {
       const plan = await MysqlRecipe.resolve(context);
-      expect(plan.env['MYSQL_HOST']).toBeUndefined();
+      expect(plan.env['MYSQL_HOST']).toBe('localhost');
     });
   }
 
