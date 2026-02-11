@@ -165,7 +165,6 @@ for i in 1 2 3 4 5 6 7 8 9 10; do
   sleep 1
 done
 sudo ln -sf /run/php/php[0-9]*-fpm.sock /run/php/php-fpm.sock`,
-      checkCmd: 'test -S /run/php/php-fpm.sock',
     },
     {
       id: 'setup-wp-database',

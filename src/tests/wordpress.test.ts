@@ -232,12 +232,11 @@ describe('WordPressRecipe', () => {
       expect(step!.cmd).toContain('php-curl');
     });
 
-    test('linux: restart-php-fpm has checkCmd', async () => {
+    test('linux: restart-php-fpm has no checkCmd', async () => {
       const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
       const plan = await WordPressRecipe.resolve(ctx);
       const step = plan.installSteps.find(s => s.id === 'restart-php-fpm');
-      expect(step!.checkCmd).toBeDefined();
-      expect(step!.checkCmd).toContain('test -S');
+      expect(step!.checkCmd).toBeUndefined();
     });
 
     test('linux: restart-php-fpm uses systemd/daemon dual-path with wait loop', async () => {
