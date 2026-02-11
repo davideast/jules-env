@@ -100,6 +100,23 @@ describe('WordPressRecipe', () => {
     expect(step!.cmd).toContain('$uri');
   });
 
+  test('configure-nginx-wp cmd contains ipv6 listener', async () => {
+    const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
+    const plan = await WordPressRecipe.resolve(ctx);
+    const step = plan.installSteps.find(s => s.id === 'configure-nginx-wp');
+    expect(step).toBeDefined();
+    expect(step!.cmd).toContain('listen [::]:');
+  });
+
+  test('wait-for-wordpress step exists and uses curl with grep', async () => {
+    const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
+    const plan = await WordPressRecipe.resolve(ctx);
+    const step = plan.installSteps.find(s => s.id === 'wait-for-wordpress');
+    expect(step).toBeDefined();
+    expect(step!.cmd).toContain('curl -sfL');
+    expect(step!.cmd).toContain('grep -qi wordpress');
+  });
+
   test('reload-nginx has no checkCmd', async () => {
     const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
     const plan = await WordPressRecipe.resolve(ctx);
@@ -119,7 +136,7 @@ describe('WordPressRecipe', () => {
 
   // Platform specific tests
   if (process.platform === 'darwin') {
-    test('macOS: 5 steps', async () => {
+    test('macOS: 6 steps', async () => {
       const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
       const plan = await WordPressRecipe.resolve(ctx);
       const ids = plan.installSteps.map(s => s.id);
@@ -128,7 +145,8 @@ describe('WordPressRecipe', () => {
         'download-wordpress',
         'configure-wordpress',
         'configure-nginx-wp',
-        'reload-nginx'
+        'reload-nginx',
+        'wait-for-wordpress'
       ]);
     });
 
@@ -184,7 +202,7 @@ describe('WordPressRecipe', () => {
   }
 
   if (process.platform === 'linux') {
-    test('linux: 8 steps', async () => {
+    test('linux: 9 steps', async () => {
       const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
       const plan = await WordPressRecipe.resolve(ctx);
       const ids = plan.installSteps.map(s => s.id);
@@ -196,7 +214,8 @@ describe('WordPressRecipe', () => {
         'configure-wordpress',
         'set-wp-ownership',
         'configure-nginx-wp',
-        'reload-nginx'
+        'reload-nginx',
+        'wait-for-wordpress'
       ]);
     });
 

@@ -81,6 +81,7 @@ WPEOF`,
 cat << 'NGINXEOF' > ${confDir}/servers/wordpress.conf
 server {
     listen ${port} default_server;
+    listen [::]:${port} default_server;
     root ${docRoot};
     index index.php index.html;
 
@@ -122,6 +123,18 @@ MAINEOF`,
       id: 'reload-nginx',
       label: 'Reload Nginx',
       cmd: 'brew services restart nginx',
+    },
+    {
+      id: 'wait-for-wordpress',
+      label: 'Wait for WordPress to be ready',
+      cmd: `for i in 1 2 3 4 5 6 7 8 9 10; do
+  if curl -sfL http://localhost:${port}/ 2>/dev/null | grep -qi wordpress; then
+    exit 0
+  fi
+  sleep 1
+done
+echo "WordPress did not respond"
+exit 1`,
     },
   ];
 
@@ -224,6 +237,7 @@ WPEOF`,
       cmd: `cat << 'NGINXEOF' | sudo tee ${confDir}/sites-available/wordpress > /dev/null
 server {
     listen ${port} default_server;
+    listen [::]:${port} default_server;
     root ${docRoot};
     index index.php index.html;
 
@@ -257,6 +271,18 @@ sudo rm -f ${confDir}/sites-enabled/default`,
 else \\
   sudo nginx -s reload; \\
 fi`,
+    },
+    {
+      id: 'wait-for-wordpress',
+      label: 'Wait for WordPress to be ready',
+      cmd: `for i in 1 2 3 4 5 6 7 8 9 10; do
+  if curl -sfL http://localhost:${port}/ 2>/dev/null | grep -qi wordpress; then
+    exit 0
+  fi
+  sleep 1
+done
+echo "WordPress did not respond"
+exit 1`,
     },
   ];
 
