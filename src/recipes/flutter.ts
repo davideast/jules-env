@@ -87,9 +87,11 @@ async function resolveLinux(): Promise<ExecutionPlan> {
   return ExecutionPlanSchema.parse({ installSteps, env, paths });
 }
 
+export { FlutterRecipe as recipe };
 export const FlutterRecipe: Recipe = {
   name: 'flutter',
   description: 'Flutter SDK (web)',
+  verify: 'flutter --version',
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':

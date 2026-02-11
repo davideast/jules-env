@@ -61,65 +61,46 @@ jobs:
       - name: Verify user is non-root
         run: docker run --rm jules-env bash -c 'test "$(id -u)" = "1001"'
 
-      - name: Dry-run flutter recipe
-        run: docker run --rm jules-env jules-env use flutter --dry-run
+      - name: Dry-run all recipes
+        run: |
+          recipes=$(docker run --rm jules-env jules-env list --json | jq -r '.[].name')
+          for recipe in $recipes; do
+            echo "--- $recipe ---"
+            docker run --rm jules-env jules-env use "$recipe" --dry-run
+          done
 
-      - name: Dry-run dart recipe
-        run: docker run --rm jules-env jules-env use dart --dry-run
-
-      - name: Dry-run ruby recipe
-        run: docker run --rm jules-env jules-env use ruby --dry-run
-
-      - name: Dry-run php recipe
-        run: docker run --rm jules-env jules-env use php --dry-run
-
-      - name: Dry-run php-sqlite recipe
-        run: docker run --rm jules-env jules-env use php-sqlite --dry-run
-
-      - name: Dry-run mysql recipe
-        run: docker run --rm jules-env jules-env use mysql --dry-run
-
-      - name: Dry-run nginx recipe
-        run: docker run --rm jules-env jules-env use nginx --dry-run
-
-      - name: Dry-run php-fpm recipe
-        run: docker run --rm jules-env jules-env use php-fpm --dry-run
-
-      - name: Dry-run mysql recipe with preset
-        run: docker run --rm jules-env jules-env use mysql --dry-run --preset testdb
-
-      - name: Dry-run laravel recipe (resolves php + php-sqlite deps)
-        run: docker run --rm jules-env jules-env use laravel --dry-run
-
-      - name: Dry-run wordpress recipe (resolves nginx + php + php-fpm + mysql deps)
-        run: docker run --rm jules-env jules-env use wordpress --dry-run
-
-      - name: Dry-run wordpress recipe with preset
+      - name: Dry-run wordpress with preset
         run: docker run --rm jules-env jules-env use wordpress --dry-run --preset myblog
 
-  docker-install-test:
+      - name: Dry-run mysql with preset
+        run: docker run --rm jules-env jules-env use mysql --dry-run --preset testdb
+
+  generate-matrix:
     needs: docker-test
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t jules-env .
+
+      - name: Generate install test matrix
+        id: set-matrix
+        run: |
+          matrix=$(docker run --rm jules-env jules-env list --json --verify \
+            | jq -c '[.[] | select(.verify) | {name, verify}]')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  docker-install-test:
+    needs: generate-matrix
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        recipe:
-          - name: ruby
-            verify: "ruby --version && gem --version"
-          - name: php
-            verify: "php --version && composer --version"
-          - name: dart
-            verify: "dart --version"
-          - name: laravel
-            verify: "laravel --version"
-          - name: wordpress
-            verify: "curl -sfL http://localhost:80/ | grep -qi wordpress"
-          - name: mysql
-            verify: "mariadb -e 'SELECT 1'"
-          - name: nginx
-            verify: "curl -sf http://localhost:80/ >/dev/null 2>&1"
-          - name: php-fpm
-            verify: "ls /run/php/php-fpm.sock"
+        recipe: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t jules-env .

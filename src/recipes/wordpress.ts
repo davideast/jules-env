@@ -293,9 +293,11 @@ exit 1`,
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
 }
 
+export { WordPressRecipe as recipe };
 export const WordPressRecipe: Recipe = {
   name: 'wordpress',
   description: 'WordPress CMS',
+  verify: 'curl -sfL http://localhost:80/ | grep -qi wordpress',
   depends: ['nginx', 'php-fpm', 'mysql'],
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {

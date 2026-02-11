@@ -63,9 +63,11 @@ async function resolveLinux(): Promise<ExecutionPlan> {
   return ExecutionPlanSchema.parse({ installSteps, env, paths });
 }
 
+export { RubyRecipe as recipe };
 export const RubyRecipe: Recipe = {
   name: 'ruby',
   description: 'Ruby programming language',
+  verify: 'ruby --version && gem --version',
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':

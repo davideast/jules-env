@@ -18,23 +18,6 @@ IMAGE="jules-env"
 NO_BUILD=false
 TIMEOUT=300
 
-verify_cmd() {
-  case "$1" in
-    dart)    echo 'dart --version' ;;
-    flutter) echo 'flutter --version' ;;
-    ruby)    echo 'ruby --version && gem --version' ;;
-    php)        echo 'php --version && composer --version' ;;
-    php-sqlite) echo 'php -m | grep -q sqlite3' ;;
-    mysql)      echo 'mariadb -e "SELECT 1"' ;;
-    nginx)      echo 'curl -sf http://localhost:80/ >/dev/null 2>&1' ;;
-    php-fpm)    echo 'ls /run/php/php-fpm.sock' ;;
-    laravel)    echo 'laravel --version' ;;
-    wordpress)  echo 'curl -sfL http://localhost:80/ | grep -qi wordpress' ;;
-    ollama)     echo 'ollama --version' ;;
-    *)          echo '' ;;
-  esac
-}
-
 # Split args on "--": recipes before, extra flags after
 recipes=()
 extra_flags=""
@@ -53,18 +36,34 @@ for arg in "$@"; do
   fi
 done
 
-if [ ${#recipes[@]} -eq 0 ]; then
-  recipes=(dart flutter ruby php php-sqlite mysql nginx php-fpm laravel wordpress ollama)
-  # Skip slow/complex recipes in CI
-  if [ "${CI:-}" = "true" ]; then
-    recipes=(dart ruby php php-sqlite mysql nginx php-fpm laravel wordpress)
-  fi
-fi
-
 if [ "$NO_BUILD" = false ]; then
   echo -e "${BOLD}Building Docker image...${RESET}"
   docker build -t "$IMAGE" .
   echo ""
+fi
+
+# Cache recipe metadata from the built image
+recipe_json=$(docker run --rm "$IMAGE" jules-env list --json --verify)
+
+verify_cmd() {
+  echo "$recipe_json" | jq -r --arg name "$1" '.[] | select(.name == $name) | .verify // empty'
+}
+
+if [ ${#recipes[@]} -eq 0 ]; then
+  # Get all recipes that have a verify command
+  mapfile -t recipes < <(echo "$recipe_json" | jq -r '.[] | select(.verify) | .name')
+  # Skip slow/complex recipes in CI
+  if [ "${CI:-}" = "true" ]; then
+    # Filter out flutter and ollama for CI
+    filtered=()
+    for r in "${recipes[@]}"; do
+      case "$r" in
+        flutter|ollama) ;;
+        *) filtered+=("$r") ;;
+      esac
+    done
+    recipes=("${filtered[@]}")
+  fi
 fi
 
 pass=0

@@ -2,38 +2,11 @@ import { Command } from 'commander';
 import { UseContextSchema } from './core/spec';
 import { executePlan } from './core/executor';
 import { resolveDependencies, CircularDependencyError, MissingDependencyError } from './core/resolver';
-import type { Recipe } from './core/spec';
-import { DartRecipe } from './recipes/dart';
-import { FlutterRecipe } from './recipes/flutter';
-import { RubyRecipe } from './recipes/ruby';
-import { PhpRecipe } from './recipes/php';
-import { PhpSqliteRecipe } from './recipes/php-sqlite';
-import { MysqlRecipe } from './recipes/mysql';
-import { NginxRecipe } from './recipes/nginx';
-import { PhpFpmRecipe } from './recipes/php-fpm';
-import { LaravelRecipe } from './recipes/laravel';
-import { WordPressRecipe } from './recipes/wordpress';
-import { loadDataRecipe } from './core/loader';
-import ollamaData from './recipes/ollama.json';
+import { recipes } from './recipes/_registry';
 import { z } from 'zod';
 import pkg from '../package.json';
 
 const program = new Command();
-
-// Registry of recipes (simple map for now)
-const recipes: Record<string, Recipe> = {
-  dart: DartRecipe,
-  flutter: FlutterRecipe,
-  ruby: RubyRecipe,
-  php: PhpRecipe,
-  'php-sqlite': PhpSqliteRecipe,
-  mysql: MysqlRecipe,
-  nginx: NginxRecipe,
-  'php-fpm': PhpFpmRecipe,
-  laravel: LaravelRecipe,
-  wordpress: WordPressRecipe,
-  ollama: loadDataRecipe(ollamaData),
-};
 
 program
   .name('jules-env')
@@ -86,6 +59,30 @@ program
         console.error("Error:", err);
       }
       process.exit(1);
+    }
+  });
+
+program
+  .command('list')
+  .description('List all available recipes')
+  .option('--json', 'Output as JSON', false)
+  .option('--verify', 'Include verify commands (requires --json)', false)
+  .action((options) => {
+    const entries = Object.values(recipes).map((r) => ({
+      name: r.name,
+      description: r.description,
+      ...(r.depends?.length ? { depends: r.depends } : {}),
+      ...(options.verify && r.verify ? { verify: r.verify } : {}),
+    }));
+
+    if (options.json) {
+      console.log(JSON.stringify(entries, null, 2));
+    } else {
+      const nameWidth = Math.max(...entries.map((e) => e.name.length));
+      for (const e of entries) {
+        const deps = e.depends ? ` (depends: ${e.depends.join(', ')})` : '';
+        console.log(`  ${e.name.padEnd(nameWidth)}  ${e.description}${deps}`);
+      }
     }
   });
 

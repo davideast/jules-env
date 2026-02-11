@@ -4,5 +4,6 @@ dist/
 **/.cache/
 /jules-env
 *.tgz
+src/recipes/_registry.ts
 .npmrc
 

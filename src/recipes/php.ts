@@ -71,9 +71,11 @@ async function resolveLinux(): Promise<ExecutionPlan> {
   return ExecutionPlanSchema.parse({ installSteps, env, paths });
 }
 
+export { PhpRecipe as recipe };
 export const PhpRecipe: Recipe = {
   name: 'php',
   description: 'PHP programming language with Composer',
+  verify: 'php --version && composer --version',
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':
