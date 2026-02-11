@@ -27,9 +27,11 @@ async function resolveLinux(): Promise<ExecutionPlan> {
   return ExecutionPlanSchema.parse({ installSteps, env: {}, paths: [] });
 }
 
+export { LaravelRecipe as recipe };
 export const LaravelRecipe: Recipe = {
   name: 'laravel',
   description: 'Laravel PHP framework installer',
+  verify: 'laravel --version',
   depends: ['php-sqlite'],
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {

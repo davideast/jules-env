@@ -35,6 +35,7 @@ export type ExecutionPlan = z.infer<typeof ExecutionPlanSchema>;
 export const DataRecipeSchema = z.object({
   name: z.string(),
   description: z.string(),
+  verify: z.string().optional(),
   defaultPreset: z.string().optional(),
   installSteps: z.array(ShellStepSchema),
   env: z.record(z.string()).default({}),
@@ -51,6 +52,7 @@ export type DataRecipe = z.infer<typeof DataRecipeSchema>;
 export interface Recipe {
   name: string;
   description: string;
+  verify?: string;
   depends?: string[];
   /**
    * Logic engine. Must be Read-Only.

@@ -1,6 +1,8 @@
 {
   "name": "ollama",
   "description": "Ollama with configurable model",
+  "verify": "ollama --version",
+  "defaultPreset": "gemma3",
   "installSteps": [
     {
       "id": "install-zstd",

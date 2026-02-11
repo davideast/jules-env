@@ -50,14 +50,16 @@ describe("Integration: Dart Recipe", () => {
 });
 
 describe("Integration: Ollama Recipe", () => {
-    test("requires --preset to specify a model", async () => {
+    test("uses default preset when --preset is not specified", async () => {
         const recipe = loadDataRecipe(ollamaData);
         const context = UseContextSchema.parse({
             runtime: 'ollama',
             dryRun: true,
         });
 
-        expect(recipe.resolve(context)).rejects.toThrow("Missing required variable: {{preset}}");
+        const plan = await recipe.resolve(context);
+        const pullStep = plan.installSteps.find(s => s.id === 'pull-model');
+        expect(pullStep?.cmd).toBe('ollama pull gemma3');
     });
 
     test("resolves plan with preset model", async () => {

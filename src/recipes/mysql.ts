@@ -88,9 +88,11 @@ fi`,
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
 }
 
+export { MysqlRecipe as recipe };
 export const MysqlRecipe: Recipe = {
   name: 'mysql',
   description: 'MySQL compatible relational database (MariaDB)',
+  verify: 'mariadb -e "SELECT 1"',
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':

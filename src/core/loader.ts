@@ -16,6 +16,7 @@ export function loadDataRecipe(data: unknown): Recipe {
   return {
     name: parsed.name,
     description: parsed.description,
+    verify: parsed.verify,
     resolve: async (ctx: UseContext) => {
       const vars: Record<string, string> = {};
       const preset = ctx.preset ?? parsed.defaultPreset;

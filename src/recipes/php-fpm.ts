@@ -67,9 +67,11 @@ fi`,
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
 }
 
+export { PhpFpmRecipe as recipe };
 export const PhpFpmRecipe: Recipe = {
   name: 'php-fpm',
   description: 'PHP FastCGI Process Manager',
+  verify: 'ls /run/php/php-fpm.sock',
   depends: ['php'],
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {

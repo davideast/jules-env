@@ -82,9 +82,11 @@ fi`,
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
 }
 
+export { NginxRecipe as recipe };
 export const NginxRecipe: Recipe = {
   name: 'nginx',
   description: 'Nginx web server',
+  verify: 'curl -sf http://localhost:80/ >/dev/null 2>&1',
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':

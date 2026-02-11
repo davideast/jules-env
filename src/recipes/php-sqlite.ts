@@ -19,9 +19,11 @@ async function resolveLinux(): Promise<ExecutionPlan> {
   return ExecutionPlanSchema.parse({ installSteps, env: {}, paths: [] });
 }
 
+export { PhpSqliteRecipe as recipe };
 export const PhpSqliteRecipe: Recipe = {
   name: 'php-sqlite',
   description: 'PHP SQLite extension',
+  verify: 'php -m | grep -q sqlite3',
   depends: ['php'],
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
