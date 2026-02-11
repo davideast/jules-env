@@ -159,12 +159,12 @@ else \\
   sudo "$FPM" --daemonize; \\
 fi
 for i in 1 2 3 4 5 6 7 8 9 10; do
-  if sudo find /run/php -name 'php*-fpm.sock' | grep -q .; then
+  if sudo find /run/php -type s -name 'php*-fpm.sock' | grep -q .; then
     break
   fi
   sleep 1
 done
-SOCKET=$(sudo find /run/php -name 'php*-fpm.sock' | head -n 1)
+SOCKET=$(sudo find /run/php -type s -name 'php*-fpm.sock' | head -n 1)
 sudo ln -sf "$SOCKET" /run/php/php-fpm.sock`,
     },
     {
