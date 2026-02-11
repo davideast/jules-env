@@ -159,12 +159,13 @@ else \\
   sudo "$FPM" --daemonize; \\
 fi
 for i in 1 2 3 4 5 6 7 8 9 10; do
-  if ls /run/php/php[0-9]*-fpm.sock >/dev/null 2>&1; then
+  if sudo find /run/php -name 'php*-fpm.sock' | grep -q .; then
     break
   fi
   sleep 1
 done
-sudo ln -sf /run/php/php[0-9]*-fpm.sock /run/php/php-fpm.sock`,
+SOCKET=$(sudo find /run/php -name 'php*-fpm.sock' | head -n 1)
+sudo ln -sf "$SOCKET" /run/php/php-fpm.sock`,
     },
     {
       id: 'setup-wp-database',

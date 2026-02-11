@@ -246,6 +246,7 @@ describe('WordPressRecipe', () => {
       expect(step!.cmd).toContain('systemctl');
       expect(step!.cmd).toContain('pkill php-fpm');
       expect(step!.cmd).toContain('sleep 1');
+      expect(step!.cmd).toContain('sudo find /run/php');
       expect(step!.cmd).toContain('sudo ln -sf');
     });
 
