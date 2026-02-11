@@ -130,11 +130,12 @@ describe("Integration: Postgres Recipe", () => {
       expect(step?.cmd).toContain('pg_ctlcluster');
     });
 
-    test("linux: setup-user step exists", async () => {
+    test("linux: setup-user step exists and creates db", async () => {
       const plan = await PostgresRecipe.resolve(context);
       const step = plan.installSteps.find(s => s.id === 'setup-user');
       expect(step).toBeDefined();
       expect(step?.cmd).toContain('createuser');
+      expect(step?.cmd).toContain('createdb');
     });
 
      test("linux: paths is empty", async () => {

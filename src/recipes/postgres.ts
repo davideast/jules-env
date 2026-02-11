@@ -84,7 +84,7 @@ async function resolveLinux(ctx: UseContext): Promise<ExecutionPlan> {
     {
       id: 'setup-user',
       label: 'Create PostgreSQL user for current user',
-      cmd: `sudo -u postgres createuser -s $(whoami)`,
+      cmd: `sudo -u postgres createuser -s $(whoami); sudo -u postgres createdb -O $(whoami) $(whoami)`,
       checkCmd: `psql -c 'SELECT 1' 2>/dev/null`,
     },
   ];
