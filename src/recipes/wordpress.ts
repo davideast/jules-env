@@ -157,7 +157,15 @@ else \\
   sudo pkill php-fpm || true; sleep 1; \\
   FPM=$(find /usr/sbin -name 'php-fpm[0-9]*' -type f | head -1); \\
   sudo "$FPM" --daemonize; \\
-fi`,
+fi
+for i in 1 2 3 4 5 6 7 8 9 10; do
+  if ls /run/php/php[0-9]*-fpm.sock >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+sudo ln -sf /run/php/php[0-9]*-fpm.sock /run/php/php-fpm.sock`,
+      checkCmd: 'test -S /run/php/php-fpm.sock',
     },
     {
       id: 'setup-wp-database',

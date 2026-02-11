@@ -232,19 +232,22 @@ describe('WordPressRecipe', () => {
       expect(step!.cmd).toContain('php-curl');
     });
 
-    test('linux: restart-php-fpm has no checkCmd', async () => {
+    test('linux: restart-php-fpm has checkCmd', async () => {
       const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
       const plan = await WordPressRecipe.resolve(ctx);
       const step = plan.installSteps.find(s => s.id === 'restart-php-fpm');
-      expect(step!.checkCmd).toBeUndefined();
+      expect(step!.checkCmd).toBeDefined();
+      expect(step!.checkCmd).toContain('test -S');
     });
 
-    test('linux: restart-php-fpm uses systemd/daemon dual-path', async () => {
+    test('linux: restart-php-fpm uses systemd/daemon dual-path with wait loop', async () => {
       const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
       const plan = await WordPressRecipe.resolve(ctx);
       const step = plan.installSteps.find(s => s.id === 'restart-php-fpm');
       expect(step!.cmd).toContain('systemctl');
       expect(step!.cmd).toContain('pkill php-fpm');
+      expect(step!.cmd).toContain('sleep 1');
+      expect(step!.cmd).toContain('sudo ln -sf');
     });
 
     test('linux: set-wp-ownership chowns to www-data', async () => {
