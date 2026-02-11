@@ -104,7 +104,7 @@ export { MongoRecipe as recipe };
 export const MongoRecipe: Recipe = {
   name: 'mongo',
   description: 'MongoDB Community Edition',
-  verify: 'mongosh --quiet --eval "db.runCommand({ping:1})"',
+  verify: "mongosh --quiet --eval 'db.runCommand({ping:1})'",
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':
