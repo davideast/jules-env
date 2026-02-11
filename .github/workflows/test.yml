@@ -91,6 +91,12 @@ jobs:
       - name: Dry-run laravel recipe (resolves php + php-sqlite deps)
         run: docker run --rm jules-env jules-env use laravel --dry-run
 
+      - name: Dry-run wordpress recipe (resolves nginx + php + php-fpm + mysql deps)
+        run: docker run --rm jules-env jules-env use wordpress --dry-run
+
+      - name: Dry-run wordpress recipe with preset
+        run: docker run --rm jules-env jules-env use wordpress --dry-run --preset myblog
+
   docker-install-test:
     needs: docker-test
     runs-on: ubuntu-latest
@@ -106,6 +112,8 @@ jobs:
             verify: "dart --version"
           - name: laravel
             verify: "laravel --version"
+          - name: wordpress
+            verify: "curl -sfL http://localhost:80/ | grep -qi wordpress"
           - name: mysql
             verify: "mariadb -e 'SELECT 1'"
           - name: nginx
