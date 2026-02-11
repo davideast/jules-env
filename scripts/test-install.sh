@@ -29,6 +29,7 @@ verify_cmd() {
     nginx)      echo 'curl -sf http://localhost:80/ >/dev/null 2>&1' ;;
     php-fpm)    echo 'ls /run/php/php-fpm.sock' ;;
     laravel)    echo 'laravel --version' ;;
+    wordpress)  echo 'curl -sfL http://localhost:80/ | grep -qi wordpress' ;;
     ollama)     echo 'ollama --version' ;;
     *)          echo '' ;;
   esac
@@ -53,10 +54,10 @@ for arg in "$@"; do
 done
 
 if [ ${#recipes[@]} -eq 0 ]; then
-  recipes=(dart flutter ruby php php-sqlite mysql nginx php-fpm laravel ollama)
+  recipes=(dart flutter ruby php php-sqlite mysql nginx php-fpm laravel wordpress ollama)
   # Skip slow/complex recipes in CI
   if [ "${CI:-}" = "true" ]; then
-    recipes=(dart ruby php php-sqlite mysql nginx php-fpm laravel)
+    recipes=(dart ruby php php-sqlite mysql nginx php-fpm laravel wordpress)
   fi
 fi
 

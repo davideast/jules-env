@@ -12,6 +12,7 @@ import { MysqlRecipe } from './recipes/mysql';
 import { NginxRecipe } from './recipes/nginx';
 import { PhpFpmRecipe } from './recipes/php-fpm';
 import { LaravelRecipe } from './recipes/laravel';
+import { WordPressRecipe } from './recipes/wordpress';
 import { loadDataRecipe } from './core/loader';
 import ollamaData from './recipes/ollama.json';
 import { z } from 'zod';
@@ -30,6 +31,7 @@ const recipes: Record<string, Recipe> = {
   nginx: NginxRecipe,
   'php-fpm': PhpFpmRecipe,
   laravel: LaravelRecipe,
+  wordpress: WordPressRecipe,
   ollama: loadDataRecipe(ollamaData),
 };
 
