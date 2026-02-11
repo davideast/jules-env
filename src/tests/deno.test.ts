@@ -69,6 +69,13 @@ describe("Integration: Deno Recipe", () => {
   }
 
   if (process.platform === 'linux') {
+    test("linux: installs unzip prerequisite", async () => {
+      const plan = await DenoRecipe.resolve(context);
+      const prereqs = plan.installSteps.find(s => s.id === 'install-deno-prereqs');
+      expect(prereqs).toBeDefined();
+      expect(prereqs?.cmd).toContain('apt-get install -y unzip');
+    });
+
     test("linux: install step uses curl install script", async () => {
       const plan = await DenoRecipe.resolve(context);
       const installStep = plan.installSteps.find(s => s.id === 'install-deno');

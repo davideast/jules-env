@@ -36,12 +36,20 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 }
 
 async function resolveLinux(): Promise<ExecutionPlan> {
-  const installSteps = [{
-    id: 'install-deno',
-    label: 'Install Deno',
-    cmd: 'curl -fsSL https://deno.land/install.sh | sh',
-    checkCmd: 'test -f $HOME/.deno/bin/deno',
-  }];
+  const installSteps = [
+    {
+      id: 'install-deno-prereqs',
+      label: 'Install prerequisites',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y unzip',
+      checkCmd: 'dpkg -s unzip',
+    },
+    {
+      id: 'install-deno',
+      label: 'Install Deno',
+      cmd: 'curl -fsSL https://deno.land/install.sh | sh',
+      checkCmd: 'test -f $HOME/.deno/bin/deno',
+    }
+  ];
 
   const env = {
     DENO_DIR: '$HOME/.deno',
