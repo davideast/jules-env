@@ -99,7 +99,7 @@ async function resolveLinux(ctx: UseContext): Promise<ExecutionPlan> {
   }
 
   const env = {
-    PGHOST: 'localhost',
+    PGHOST: '/var/run/postgresql',
   };
 
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });

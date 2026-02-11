@@ -24,10 +24,19 @@ describe("Integration: Postgres Recipe", () => {
     }
   });
 
-  test("sets PGHOST env var to localhost", async () => {
-    const plan = await PostgresRecipe.resolve(context);
-    expect(plan.env['PGHOST']).toBe('localhost');
-  });
+  if (process.platform === 'darwin') {
+    test("sets PGHOST env var to localhost on macOS", async () => {
+      const plan = await PostgresRecipe.resolve(context);
+      expect(plan.env['PGHOST']).toBe('localhost');
+    });
+  }
+
+  if (process.platform === 'linux') {
+    test("sets PGHOST env var to socket path on Linux", async () => {
+      const plan = await PostgresRecipe.resolve(context);
+      expect(plan.env['PGHOST']).toBe('/var/run/postgresql');
+    });
+  }
 
   test("plan validates against ExecutionPlanSchema", async () => {
     const plan = await PostgresRecipe.resolve(context);
