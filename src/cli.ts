@@ -9,6 +9,8 @@ import { RubyRecipe } from './recipes/ruby';
 import { PhpRecipe } from './recipes/php';
 import { PhpSqliteRecipe } from './recipes/php-sqlite';
 import { MysqlRecipe } from './recipes/mysql';
+import { NginxRecipe } from './recipes/nginx';
+import { PhpFpmRecipe } from './recipes/php-fpm';
 import { LaravelRecipe } from './recipes/laravel';
 import { loadDataRecipe } from './core/loader';
 import ollamaData from './recipes/ollama.json';
@@ -25,6 +27,8 @@ const recipes: Record<string, Recipe> = {
   php: PhpRecipe,
   'php-sqlite': PhpSqliteRecipe,
   mysql: MysqlRecipe,
+  nginx: NginxRecipe,
+  'php-fpm': PhpFpmRecipe,
   laravel: LaravelRecipe,
   ollama: loadDataRecipe(ollamaData),
 };

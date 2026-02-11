@@ -79,6 +79,12 @@ jobs:
       - name: Dry-run mysql recipe
         run: docker run --rm jules-env jules-env use mysql --dry-run
 
+      - name: Dry-run nginx recipe
+        run: docker run --rm jules-env jules-env use nginx --dry-run
+
+      - name: Dry-run php-fpm recipe
+        run: docker run --rm jules-env jules-env use php-fpm --dry-run
+
       - name: Dry-run mysql recipe with preset
         run: docker run --rm jules-env jules-env use mysql --dry-run --preset testdb
 
@@ -104,6 +110,10 @@ jobs:
             verify: "mariadb -e 'SELECT 1'"
           - name: mysql --preset testdb
             verify: "mariadb -e 'SHOW DATABASES' | grep testdb"
+          - name: nginx
+            verify: "curl -sf http://localhost:80/ >/dev/null 2>&1"
+          - name: php-fpm
+            verify: "ls /run/php/php-fpm.sock"
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t jules-env .
