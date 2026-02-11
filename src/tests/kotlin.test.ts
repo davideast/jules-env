@@ -87,6 +87,7 @@ describe("Integration: Kotlin Recipe", () => {
       expect(prereqs?.cmd).toContain('apt-get');
       expect(prereqs?.cmd).toContain('unzip');
       expect(prereqs?.cmd).toContain('zip');
+      expect(prereqs?.cmd).toContain('openjdk-21-jre');
     });
 
     test("linux: install step uses curl and unzip", async () => {

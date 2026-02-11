@@ -40,8 +40,8 @@ async function resolveLinux(): Promise<ExecutionPlan> {
     {
       id: 'install-kotlin-prereqs',
       label: 'Install prerequisites',
-      cmd: '(sudo apt-get update || true) && sudo apt-get install -y unzip zip',
-      checkCmd: 'dpkg -s unzip && dpkg -s zip',
+      cmd: '(sudo apt-get update || true) && sudo apt-get install -y unzip zip openjdk-21-jre',
+      checkCmd: 'dpkg -s unzip && dpkg -s zip && command -v java',
     },
     {
       id: 'install-kotlin-compiler',
