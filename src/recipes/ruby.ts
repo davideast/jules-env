@@ -1,6 +1,5 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   const installSteps = [{
@@ -12,9 +11,21 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 
   let rubyPrefix = '';
   try {
-    const result = spawnSync('brew', ['--prefix', 'ruby'], { encoding: 'utf-8' });
-    if (result.status === 0) {
-      rubyPrefix = result.stdout.trim();
+    if (typeof Bun !== 'undefined') {
+      const proc = Bun.spawn(['brew', '--prefix', 'ruby'], { stdout: 'pipe' });
+      const output = await new Response(proc.stdout).text();
+      if (output.trim()) {
+        rubyPrefix = output.trim();
+      }
+    } else {
+      const { spawn } = await import('node:child_process');
+      rubyPrefix = await new Promise<string>((resolve) => {
+        const child = spawn('brew', ['--prefix', 'ruby']);
+        let stdout = '';
+        child.stdout?.on('data', (data) => { stdout += data; });
+        child.on('close', () => resolve(stdout.trim()));
+        child.on('error', () => resolve(''));
+      });
     }
   } catch (e) {
     // ignore — brew may not be installed
