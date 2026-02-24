@@ -71,12 +71,96 @@ Preview what would happen without touching the system:
 jules-env use dart --dry-run
 ```
 
-## Available recipes
+## Runtimes and Tools
 
-| Runtime | Recipe | Type | Description |
-|---------|--------|------|-------------|
-| Dart | `dart` | Code | Installs the Dart SDK (Homebrew on macOS, apt on Linux) |
-| Ollama | `ollama` | Data | Installs Ollama with EmbeddingGemma model |
+Practical guides for setting up common development environments.
+
+### WordPress
+
+Installs a complete WordPress stack including Nginx, PHP-FPM, and MySQL (MariaDB). It configures Nginx to serve WordPress and sets up the database.
+
+```bash
+jules-env use wordpress
+```
+
+This will:
+- Install Nginx, PHP-FPM, and MariaDB if they are not already installed.
+- Configure Nginx to serve from a local directory (e.g., `/var/www/html` on Linux or Homebrew prefix on macOS).
+- Create a database and user.
+- Download and configure WordPress.
+
+### PostgreSQL
+
+Installs and starts PostgreSQL.
+
+```bash
+jules-env use postgres
+```
+
+You can also specify a preset to automatically create a database:
+
+```bash
+jules-env use postgres --preset my_app_db
+```
+
+This ensures the service is running and the database exists.
+
+### Laravel
+
+Sets up the Laravel installer globally. Note that this requires PHP, which will be installed automatically as a dependency (along with the SQLite extension).
+
+```bash
+jules-env use laravel
+```
+
+After this, you can run `laravel new my-project`.
+
+### Ollama
+
+Installs Ollama and pulls a specific model.
+
+```bash
+jules-env use ollama --preset llama3
+```
+
+This uses a data recipe to install Ollama and pull the `llama3` model.
+
+### General Usage
+
+To use any runtime, simply run:
+
+```bash
+jules-env use <runtime>
+```
+
+You can combine multiple runtimes by running the command multiple times. They will all contribute to your `~/.jules/shellenv` file.
+
+## Exhaustive list
+
+A complete reference of all available tools and runtimes.
+
+| Runtime | Type | Description | Dependencies |
+| :--- | :--- | :--- | :--- |
+| `dart` | Code | Dart SDK | - |
+| `deno` | Code | Deno runtime | - |
+| `dotnet` | Code | .NET SDK | - |
+| `flutter` | Code | Flutter SDK (web) | - |
+| `gh` | Code | GitHub CLI | - |
+| `kotlin` | Code | Kotlin programming language | - |
+| `laravel` | Code | Laravel PHP framework installer | `php-sqlite` |
+| `mongo` | Code | MongoDB Community Edition | - |
+| `mysql` | Code | MySQL compatible relational database (MariaDB) | - |
+| `nginx` | Code | Nginx web server | - |
+| `ollama` | Data | Ollama with configurable model | - |
+| `php` | Code | PHP programming language with Composer | - |
+| `php-fpm` | Code | PHP FastCGI Process Manager | `php` |
+| `php-sqlite` | Code | PHP SQLite extension | `php` |
+| `postgres` | Code | PostgreSQL relational database | - |
+| `r-lang` | Code | R programming language | - |
+| `redis` | Code | Redis in-memory data structure store | - |
+| `ruby` | Code | Ruby programming language | - |
+| `swift` | Code | Swift Programming Language | - |
+| `wordpress` | Code | WordPress CMS | `nginx`, `php-fpm`, `mysql` |
 
 ## Installation
 
