@@ -84,9 +84,10 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
     console.log(`[State] Append to ~/.jules/shellenv:`);
     console.log(stateContent);
   } else {
+    await mkdir(julesDir, { recursive: true });
+    // Always create or append to ensure file exists for sourcing
+    await appendFile(stateFile, stateContent);
     if (stateContent) {
-      await mkdir(julesDir, { recursive: true });
-      await appendFile(stateFile, stateContent);
       console.log(`Updated ~/.jules/shellenv`);
     }
   }
