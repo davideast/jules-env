@@ -61,7 +61,11 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
     await Promise.all(
       plan.files.map(async (file) => {
         await mkdir(dirname(file.path), { recursive: true });
-        await writeFile(file.path, file.content);
+        if (typeof Bun !== 'undefined') {
+          await Bun.write(file.path, file.content);
+        } else {
+          await writeFile(file.path, file.content);
+        }
       }),
     );
   }
