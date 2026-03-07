@@ -73,16 +73,18 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
   // 3. State Persistence (.jules/shellenv)
   const julesDir = resolve(homedir(), '.jules');
   const stateFile = resolve(julesDir, 'shellenv');
-  let stateContent = '';
+  const stateLines: string[] = [];
 
   if (plan.paths.length > 0) {
     // Prepend to PATH
-    stateContent += `export PATH="${plan.paths.join(':')}:$PATH"\n`;
+    stateLines.push(`export PATH="${plan.paths.join(':')}:$PATH"`);
   }
 
   for (const [key, val] of Object.entries(plan.env)) {
-    stateContent += `export ${key}="${val}"\n`;
+    stateLines.push(`export ${key}="${val}"`);
   }
+
+  const stateContent = stateLines.length > 0 ? stateLines.join('\n') + '\n' : '';
 
   if (dryRun) {
     console.log(`[State] Append to ~/.jules/shellenv:`);
