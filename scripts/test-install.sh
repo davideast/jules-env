@@ -84,7 +84,7 @@ for recipe in "${recipes[@]}"; do
 
   setup_env=""
   if [ "$recipe" = "firebase-tools" ]; then
-    setup_env="sudo apt-get update && sudo apt-get install -y default-jre && curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - && sudo apt-get install -y nodejs && mkdir -p ~/.npm-global && npm config set prefix '~/.npm-global' && export PATH=~/.npm-global/bin:\$PATH && "
+    setup_env="sudo apt-get update && sudo apt-get install -y default-jre curl && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs && sudo mkdir -p /usr/local/lib/node_modules /usr/local/bin && sudo chown -R jules:jules /usr/local/lib/node_modules /usr/local/bin && "
   fi
 
   run_cmd="${setup_env}${use_cmd} && source ~/.jules/shellenv && $verify"
