@@ -104,6 +104,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t jules-env .
+      - name: Install dependencies for firebase-tools
+        if: matrix.recipe.name == 'firebase-tools'
+        run: |
+          docker build -t jules-env - <<EOF
+          FROM jules-env
+          USER root
+          RUN apt-get update && apt-get install -y default-jre curl && \
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+              apt-get install -y nodejs && \
+              mkdir -p /usr/local/lib/node_modules /usr/local/bin && \
+              chown -R jules:jules /usr/local/lib/node_modules /usr/local/bin
+          USER jules
+          EOF
       - name: Install and verify ${{ matrix.recipe.name }}
         run: |
           docker run --rm jules-env bash -c \
