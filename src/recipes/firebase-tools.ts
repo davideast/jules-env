@@ -6,8 +6,7 @@ export const firebaseTools: Recipe = {
   name: 'firebase-tools',
   description: 'Firebase CLI and pre-cached Local Emulator Suite',
   // Node and Java are already assumed on the Jules VM
-  dependencies: [],
-  checkCmd: 'firebase --version',
+  depends: [],
   // Hook for the containerized E2E test to verify the CLI works AND the cache exists
   verify: "firebase --version && test -d ~/.cache/firebase/emulators && ls ~/.cache/firebase/emulators | grep -q firestore",
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
