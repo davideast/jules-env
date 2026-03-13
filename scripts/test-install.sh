@@ -82,7 +82,12 @@ for recipe in "${recipes[@]}"; do
   echo "  Install: $use_cmd"
   echo "  Verify:  $verify"
 
-  run_cmd="$use_cmd && source ~/.jules/shellenv && $verify"
+  setup_env=""
+  if [ "$recipe" = "firebase-tools" ]; then
+    setup_env="sudo apt-get update && sudo apt-get install -y default-jre curl && curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs && sudo mkdir -p /usr/local/lib/node_modules /usr/local/bin && sudo chown -R jules:jules /usr/local/lib/node_modules /usr/local/bin && "
+  fi
+
+  run_cmd="${setup_env}${use_cmd} && source ~/.jules/shellenv && $verify"
 
   if timeout "$TIMEOUT" docker run --rm "$IMAGE" bash -c "$run_cmd"; then
     echo -e "  ${GREEN}PASS${RESET} $recipe"
