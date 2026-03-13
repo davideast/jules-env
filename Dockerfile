@@ -6,7 +6,7 @@ RUN bun install && bun run build
 FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates git sudo gnupg wget && \
+    curl ca-certificates git sudo gnupg wget default-jre npm nodejs && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Bun runtime (needed by bin/jules-env shim)
