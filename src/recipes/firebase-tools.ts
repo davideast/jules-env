@@ -2,20 +2,19 @@ import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
 
 export { firebaseTools as recipe };
-export const firebaseTools: Recipe = {
+export const firebaseTools: Recipe & { verify?: string } = {
   name: 'firebase-tools',
   description: 'Firebase CLI and pre-cached Local Emulator Suite',
-  // Node and Java are already assumed on the Jules VM
-  depends: [],
+  // Ensure the VM (and the Docker test container) installs node and java first
+  depends: ['node', 'java'],
   // Hook for the containerized E2E test to verify the CLI works AND the cache exists
-  verify: "firebase --version && test -d ~/.cache/firebase/emulators && ls ~/.cache/firebase/emulators | grep -q firestore",
+  verify: "firebase --version && test -d ~/.cache/firebase/emulators && ls ~/.cache/firebase/emulators | grep firestore",
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     const installSteps = [
       {
         id: 'install-firebase-tools',
         label: 'Install Firebase Tools',
-        cmd: 'npm install -g firebase-tools',
-        checkCmd: 'firebase --version',
+        cmd: 'sudo npm install -g firebase-tools',
       },
       {
         id: 'setup-emulator-ui',

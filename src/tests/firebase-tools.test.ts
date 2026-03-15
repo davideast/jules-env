@@ -14,7 +14,7 @@ describe("Integration: firebase-tools Recipe", () => {
         const cmds = plan.installSteps.map(s => s.cmd);
 
         // Ensure we are doing the global npm install
-        expect(cmds.some(cmd => cmd.includes('npm install -g firebase-tools'))).toBe(true);
+        expect(cmds.some(cmd => cmd.includes('sudo npm install -g firebase-tools'))).toBe(true);
 
         // Ensure we are caching the emulators
         expect(cmds.some(cmd => cmd.includes('firebase setup:emulators:firestore'))).toBe(true);
