@@ -78,7 +78,7 @@ program
     if (options.json) {
       console.log(JSON.stringify(entries, null, 2));
     } else {
-      const nameWidth = Math.max(...entries.map((e) => e.name.length));
+      const nameWidth = entries.reduce((max, e) => Math.max(max, e.name.length), 0);
       for (const e of entries) {
         const deps = e.depends ? ` (depends: ${e.depends.join(', ')})` : '';
         console.log(`  ${e.name.padEnd(nameWidth)}  ${e.description}${deps}`);
