@@ -5,8 +5,6 @@ export { firebaseTools as recipe };
 export const firebaseTools: Recipe & { verify?: string } = {
   name: 'firebase-tools',
   description: 'Firebase CLI and pre-cached Local Emulator Suite',
-  // Ensure the VM (and the Docker test container) installs node and java first
-  depends: ['node', 'java'],
   // Hook for the containerized E2E test to verify the CLI works AND the cache exists
   verify: "firebase --version && test -d ~/.cache/firebase/emulators && ls ~/.cache/firebase/emulators | grep firestore",
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
