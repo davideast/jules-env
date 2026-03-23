@@ -10,6 +10,18 @@ export const firebaseTools: Recipe & { verify?: string } = {
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     const installSteps = [
       {
+        id: 'install-nodejs',
+        label: 'Install Node.js',
+        cmd: 'curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt-get install -y nodejs',
+        checkCmd: 'command -v npm',
+      },
+      {
+        id: 'install-java',
+        label: 'Install Java',
+        cmd: '(sudo apt-get update || true) && sudo apt-get install -y openjdk-21-jre-headless',
+        checkCmd: 'command -v java',
+      },
+      {
         id: 'install-firebase-tools',
         label: 'Install Firebase Tools',
         cmd: 'sudo npm install -g firebase-tools',
