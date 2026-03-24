@@ -41,10 +41,16 @@ async function resolveDarwin(ctx: UseContext): Promise<ExecutionPlan> {
         brewPrefix = output.trim();
       }
     } else {
-      const { spawnSync } = await import('node:child_process');
-      const proc = spawnSync('brew', ['--prefix', 'postgresql@16'], { encoding: 'utf-8' });
-      if (proc.stdout && proc.stdout.trim()) {
-        brewPrefix = proc.stdout.trim();
+      const { spawn } = await import('node:child_process');
+      const output = await new Promise<string>((resolve) => {
+        const child = spawn('brew', ['--prefix', 'postgresql@16']);
+        let stdout = '';
+        child.stdout?.on('data', (data) => { stdout += data; });
+        child.on('close', () => resolve(stdout.trim()));
+        child.on('error', () => resolve(''));
+      });
+      if (output) {
+        brewPrefix = output;
       }
     }
   } catch (e) {
