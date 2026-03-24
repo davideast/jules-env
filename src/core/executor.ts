@@ -58,9 +58,17 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
       console.log(file.content);
     }
   } else {
+    // Collect unique directories to avoid redundant and conflicting mkdir calls
+    const dirs = new Set<string>();
+    for (const file of plan.files) {
+      dirs.add(dirname(file.path));
+    }
+    await Promise.all(
+      Array.from(dirs).map((dir) => mkdir(dir, { recursive: true }))
+    );
+
     await Promise.all(
       plan.files.map(async (file) => {
-        await mkdir(dirname(file.path), { recursive: true });
         if (typeof Bun !== 'undefined') {
           await Bun.write(file.path, file.content);
         } else {
