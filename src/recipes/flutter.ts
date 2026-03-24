@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { execAsync } from '../core/process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   const installSteps = [
@@ -20,11 +20,11 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 
   let flutterRoot = '';
   try {
-    const result = spawnSync('brew', ['--cask', '--room'], { encoding: 'utf-8' });
+    const result = await execAsync('brew', ['--cask', '--room']);
     if (result.status === 0) {
       const caskroom = result.stdout.trim();
       // Find the actual flutter path inside the caskroom
-      const ls = spawnSync('ls', [caskroom + '/flutter'], { encoding: 'utf-8' });
+      const ls = await execAsync('ls', [caskroom + '/flutter']);
       if (ls.status === 0) {
         const version = ls.stdout.trim().split('\n')[0];
         if (version) {

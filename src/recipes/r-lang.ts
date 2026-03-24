@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { execAsync } from '../core/process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   const installSteps = [{
@@ -12,7 +12,7 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 
   let rPrefix = '';
   try {
-    const result = spawnSync('brew', ['--prefix', 'r'], { encoding: 'utf-8' });
+    const result = await execAsync('brew', ['--prefix', 'r']);
     if (result.status === 0) {
       rPrefix = result.stdout.trim();
     }
