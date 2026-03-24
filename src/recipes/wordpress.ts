@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 
 function randomKey(): string {
@@ -12,9 +12,21 @@ async function resolveDarwin(ctx: UseContext): Promise<ExecutionPlan> {
 
   let brewPrefix = '';
   try {
-    const result = spawnSync('brew', ['--prefix'], { encoding: 'utf-8' });
-    if (result.status === 0) {
-      brewPrefix = result.stdout.trim();
+    const result = await new Promise<string>((resolve, reject) => {
+      const proc = spawn('brew', ['--prefix']);
+      let stdout = '';
+      proc.stdout.on('data', chunk => stdout += chunk);
+      proc.on('close', code => {
+        if (code === 0) {
+          resolve(stdout.trim());
+        } else {
+          reject(new Error('command failed'));
+        }
+      });
+      proc.on('error', reject);
+    });
+    if (result) {
+      brewPrefix = result;
     }
   } catch (e) {
     // ignore
