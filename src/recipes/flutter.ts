@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   const installSteps = [
@@ -20,13 +20,37 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 
   let flutterRoot = '';
   try {
-    const result = spawnSync('brew', ['--cask', '--room'], { encoding: 'utf-8' });
-    if (result.status === 0) {
-      const caskroom = result.stdout.trim();
+    const result = await new Promise<string>((resolve, reject) => {
+      const proc = spawn('brew', ['--cask', '--room']);
+      let stdout = '';
+      proc.stdout.on('data', chunk => stdout += chunk);
+      proc.on('close', code => {
+        if (code === 0) {
+          resolve(stdout.trim());
+        } else {
+          reject(new Error('command failed'));
+        }
+      });
+      proc.on('error', reject);
+    });
+    if (result) {
+      const caskroom = result;
       // Find the actual flutter path inside the caskroom
-      const ls = spawnSync('ls', [caskroom + '/flutter'], { encoding: 'utf-8' });
-      if (ls.status === 0) {
-        const version = ls.stdout.trim().split('\n')[0];
+      const ls = await new Promise<string>((resolve, reject) => {
+        const proc = spawn('ls', [caskroom + '/flutter']);
+        let stdout = '';
+        proc.stdout.on('data', chunk => stdout += chunk);
+        proc.on('close', code => {
+          if (code === 0) {
+            resolve(stdout.trim());
+          } else {
+            reject(new Error('command failed'));
+          }
+        });
+        proc.on('error', reject);
+      });
+      if (ls) {
+        const version = ls.split('\n')[0];
         if (version) {
           flutterRoot = `${caskroom}/flutter/${version}/flutter`;
         }

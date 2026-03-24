@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   const installSteps = [{
@@ -12,9 +12,21 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 
   let dartPrefix = '';
   try {
-    const result = spawnSync('brew', ['--prefix', 'dart-sdk'], { encoding: 'utf-8' });
-    if (result.status === 0) {
-      dartPrefix = result.stdout.trim();
+    const result = await new Promise<string>((resolve, reject) => {
+      const proc = spawn('brew', ['--prefix', 'dart-sdk']);
+      let stdout = '';
+      proc.stdout.on('data', chunk => stdout += chunk);
+      proc.on('close', code => {
+        if (code === 0) {
+          resolve(stdout.trim());
+        } else {
+          reject(new Error('command failed'));
+        }
+      });
+      proc.on('error', reject);
+    });
+    if (result) {
+      dartPrefix = result;
     }
   } catch (e) {
     // ignore — brew may not be installed
