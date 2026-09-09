@@ -307,4 +307,13 @@ describe('WordPressRecipe', () => {
       expect(step!.cmd).toContain('nginx -s reload');
     });
   }
+
+  test("verify targets the URL the plan actually publishes", async () => {
+    const ctx = UseContextSchema.parse({ runtime: 'wordpress' });
+    const plan = await WordPressRecipe.resolve(ctx);
+    const url = plan.env['WORDPRESS_URL'];
+
+    expect(url).toBeDefined();
+    expect(WordPressRecipe.verify).toContain(url!);
+  });
 });
