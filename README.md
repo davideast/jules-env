@@ -42,7 +42,17 @@ Source it to activate:
 source ~/.jules/shellenv
 ```
 
-The file is appended to on subsequent runs, so multiple runtimes compose cleanly.
+The file is appended to on subsequent runs, so multiple runtimes compose cleanly. Entries that are already present are skipped, so re-running a recipe does not stack duplicate exports.
+
+### Changing the state directory
+
+Set `JULES_HOME` to keep state somewhere other than `~/.jules`:
+
+```bash
+JULES_HOME=/tmp/jules-sandbox jules-env use dart
+```
+
+The shellenv is written to that directory, and install steps source it from there, so a relocated environment stays self-consistent. Useful for sandboxing a run or for testing without touching your own environment.
 
 ## CLI reference
 
