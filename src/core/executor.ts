@@ -4,7 +4,24 @@ import { mkdir, writeFile, appendFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { homedir } from 'node:os';
 
-const SHELLENV_SOURCE = 'test -f $HOME/.jules/shellenv && . $HOME/.jules/shellenv; ';
+/**
+ * Directory holding persisted shell state. Defaults to ~/.jules, but
+ * JULES_HOME overrides it so callers (and the test suite) can point somewhere
+ * else instead of writing to the user's real home directory.
+ */
+export function julesStateDir(): string {
+  const override = process.env['JULES_HOME'];
+  return override ? resolve(override) : resolve(homedir(), '.jules');
+}
+
+export function shellenvPath(): string {
+  return resolve(julesStateDir(), 'shellenv');
+}
+
+function shellenvSource(): string {
+  const file = shellenvPath();
+  return `test -f "${file}" && . "${file}"; `;
+}
 
 export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: string) {
   if (dryRun) {
@@ -25,7 +42,7 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
       let skip = false;
       if (step.checkCmd) {
         // Auto-source shellenv for checkCmd
-        const fullCheckCmd = `${SHELLENV_SOURCE}${step.checkCmd}`;
+        const fullCheckCmd = `${shellenvSource()}${step.checkCmd}`;
         const check = spawn('sh', ['-c', fullCheckCmd], {
           stdio: 'ignore',
         });
@@ -38,7 +55,7 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
 
       if (!skip) {
         // Auto-source shellenv for cmd
-        const fullCmd = `${SHELLENV_SOURCE}${step.cmd}`;
+        const fullCmd = `${shellenvSource()}${step.cmd}`;
         const proc = spawn('sh', ['-c', fullCmd], {
           stdio: 'inherit',
         });
@@ -79,8 +96,8 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
   }
 
   // 3. State Persistence (.jules/shellenv)
-  const julesDir = resolve(homedir(), '.jules');
-  const stateFile = resolve(julesDir, 'shellenv');
+  const julesDir = julesStateDir();
+  const stateFile = shellenvPath();
   let stateContent = '';
 
   if (plan.paths.length > 0) {
@@ -93,14 +110,14 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
   }
 
   if (dryRun) {
-    console.log(`[State] Append to ~/.jules/shellenv:`);
+    console.log(`[State] Append to ${stateFile}:`);
     console.log(stateContent);
   } else {
     await mkdir(julesDir, { recursive: true });
     // Always create or append to ensure file exists for sourcing
     await appendFile(stateFile, stateContent);
     if (stateContent) {
-      console.log(`Updated ~/.jules/shellenv`);
+      console.log(`Updated ${stateFile}`);
     }
   }
 }
