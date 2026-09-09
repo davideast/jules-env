@@ -16,7 +16,10 @@ program
 program
   .command('use <runtime>')
   .description('Setup a runtime environment')
-  .option('--version <v>', 'Version to install', 'latest')
+  // NOTE: not `--version`. Commander's program-level version option is
+  // inherited by subcommands, so `use <rt> --version <v>` would print the CLI
+  // version and exit instead of reaching this action.
+  .option('--runtime-version <v>', 'Version of the runtime to install', 'latest')
   .option('--dry-run', 'Simulate execution', false)
   .option('--preset <p>', 'Configuration preset')
   .action(async (runtime, options) => {
@@ -24,7 +27,7 @@ program
       // 1. Parse Context (for the main target)
       const context = UseContextSchema.parse({
         runtime,
-        version: options.version,
+        version: options.runtimeVersion,
         preset: options.preset,
         dryRun: options.dryRun,
       });

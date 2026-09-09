@@ -68,7 +68,7 @@ jules-env use <runtime> [options]
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `--version <v>` | Version of the runtime to install | `latest` |
+| `--runtime-version <v>` | Version of the runtime to install | `latest` |
 | `--dry-run` | Simulate execution — no changes are made | `false` |
 | `--preset <p>` | Apply a configuration preset (if available for the runtime) | — |
 | `-h, --help` | Display help | — |
