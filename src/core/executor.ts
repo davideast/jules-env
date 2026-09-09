@@ -1,7 +1,7 @@
 import type { ExecutionPlan } from './spec';
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile, appendFile } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
 /**
@@ -16,6 +16,16 @@ export function julesStateDir(): string {
 
 export function shellenvPath(): string {
   return resolve(julesStateDir(), 'shellenv');
+}
+
+/**
+ * Expands a leading `~` to the home directory. Plan file paths are written
+ * directly by this process, so no shell is involved to expand it for us.
+ */
+function expandHome(filePath: string): string {
+  if (filePath === '~') return homedir();
+  if (filePath.startsWith('~/')) return join(homedir(), filePath.slice(2));
+  return filePath;
 }
 
 function shellenvSource(): string {
@@ -75,21 +85,28 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
       console.log(file.content);
     }
   } else {
+    // Resolve ~ once per file, so the directories created below and the files
+    // written are the same paths.
+    const targets = plan.files.map((file) => ({
+      path: expandHome(file.path),
+      content: file.content,
+    }));
+
     // Collect unique directories to avoid redundant and conflicting mkdir calls
     const dirs = new Set<string>();
-    for (const file of plan.files) {
-      dirs.add(dirname(file.path));
+    for (const target of targets) {
+      dirs.add(dirname(target.path));
     }
     await Promise.all(
       Array.from(dirs).map((dir) => mkdir(dir, { recursive: true }))
     );
 
     await Promise.all(
-      plan.files.map(async (file) => {
+      targets.map(async (target) => {
         if (typeof Bun !== 'undefined') {
-          await Bun.write(file.path, file.content);
+          await Bun.write(target.path, target.content);
         } else {
-          await writeFile(file.path, file.content);
+          await writeFile(target.path, target.content);
         }
       }),
     );
