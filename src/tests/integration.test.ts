@@ -1,4 +1,8 @@
 import { describe, test, expect } from "bun:test";
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { DartRecipe } from '../recipes/dart';
 import { UseContextSchema } from '../core/spec';
 import { loadDataRecipe } from '../core/loader';
@@ -82,7 +86,9 @@ describe("Integration: Ollama Recipe", () => {
 
         const pullStep = plan.installSteps.find(s => s.id === 'pull-model');
         expect(pullStep?.cmd).toBe('ollama pull embeddinggemma');
-        expect(pullStep?.checkCmd).toBe('ollama list | grep embeddinggemma');
+        // Asserts the preset was substituted, not how the check is spelled.
+        expect(pullStep?.checkCmd).toContain('embeddinggemma');
+        expect(pullStep?.checkCmd).not.toContain('{{preset}}');
 
         // Check pipe/chain commands are preserved
         const installOllama = plan.installSteps.find(s => s.id === 'install-ollama');
@@ -104,7 +110,8 @@ describe("Integration: Ollama Recipe", () => {
         const pullStep = plan.installSteps.find(s => s.id === 'pull-model');
         expect(pullStep?.label).toBe('Pull phi4-mini:latest model');
         expect(pullStep?.cmd).toBe('ollama pull phi4-mini:latest');
-        expect(pullStep?.checkCmd).toBe('ollama list | grep phi4-mini:latest');
+        expect(pullStep?.checkCmd).toContain('phi4-mini:latest');
+        expect(pullStep?.checkCmd).not.toContain('{{preset}}');
     });
 
     test("sets OLLAMA_HOST env var", async () => {
@@ -113,5 +120,65 @@ describe("Integration: Ollama Recipe", () => {
         const plan = await recipe.resolve(context);
 
         expect(plan.env['OLLAMA_HOST']).toBe('http://localhost:11434');
+    });
+});
+
+
+describe("Integration: Ollama model check", () => {
+    /**
+     * Runs a step's checkCmd against a stub `ollama` whose `list` output is
+     * controlled, and reports whether the check passed. A passing check means
+     * the pull step gets skipped.
+     */
+    function checkPasses(checkCmd: string, listOutput: string): boolean {
+        const dir = mkdtempSync(join(tmpdir(), 'jules-ollama-'));
+        const listFile = join(dir, 'list.txt');
+        writeFileSync(listFile, listOutput);
+        writeFileSync(
+            join(dir, 'ollama'),
+            '#!/bin/sh\nif [ "$1" = "list" ]; then cat "$OLLAMA_FAKE_LIST"; fi\n',
+            { mode: 0o755 },
+        );
+
+        const result = spawnSync('sh', ['-c', checkCmd], {
+            encoding: 'utf-8',
+            env: { ...process.env, PATH: `${dir}:${process.env['PATH']}`, OLLAMA_FAKE_LIST: listFile },
+        });
+        return result.status === 0;
+    }
+
+    const HEADER = 'NAME                ID              SIZE      MODIFIED\n';
+
+    async function pullCheckFor(preset: string): Promise<string> {
+        const recipe = loadDataRecipe(ollamaData);
+        const plan = await recipe.resolve(UseContextSchema.parse({ runtime: 'ollama', preset }));
+        return plan.installSteps.find(s => s.id === 'pull-model')!.checkCmd!;
+    }
+
+    test("a different model sharing a name prefix does not satisfy the check", async () => {
+        const checkCmd = await pullCheckFor('llama3');
+        const installed = HEADER + 'llama3.1:latest     42182419e950    4.7 GB    2 days ago\n';
+
+        expect(checkPasses(checkCmd, installed)).toBe(false);
+    });
+
+    test("the requested model does satisfy the check", async () => {
+        const checkCmd = await pullCheckFor('llama3');
+        const installed = HEADER + 'llama3:latest       365c0bd3c000    4.7 GB    2 days ago\n';
+
+        expect(checkPasses(checkCmd, installed)).toBe(true);
+    });
+
+    test("an explicitly tagged preset matches its own tag", async () => {
+        const checkCmd = await pullCheckFor('llama3.1:8b');
+        const installed = HEADER + 'llama3.1:8b         42182419e950    4.7 GB    2 days ago\n';
+
+        expect(checkPasses(checkCmd, installed)).toBe(true);
+    });
+
+    test("nothing installed does not satisfy the check", async () => {
+        const checkCmd = await pullCheckFor('llama3');
+
+        expect(checkPasses(checkCmd, HEADER)).toBe(false);
     });
 });
