@@ -3,6 +3,9 @@ import { ExecutionPlanSchema } from '../core/spec';
 import { spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 
+// Must match the port the nginx recipe serves on for this platform.
+const WORDPRESS_PORT = process.platform === 'darwin' ? '8080' : '80';
+
 function randomKey(): string {
   return randomBytes(32).toString('hex');
 }
@@ -25,7 +28,7 @@ async function resolveDarwin(ctx: UseContext): Promise<ExecutionPlan> {
 
   const confDir = `${brewPrefix}/etc/nginx`;
   const docRoot = `${brewPrefix}/var/www`;
-  const port = '8080';
+  const port = WORDPRESS_PORT;
   const fpmListen = '127.0.0.1:9000';
 
   const installSteps = [
@@ -149,7 +152,7 @@ async function resolveLinux(ctx: UseContext): Promise<ExecutionPlan> {
   const dbName = ctx.preset || 'wordpress';
   const confDir = '/etc/nginx';
   const docRoot = '/var/www/html';
-  const port = '80';
+  const port = WORDPRESS_PORT;
   const fpmListen = 'unix:/run/php/php-fpm.sock';
 
   const installSteps = [
@@ -297,7 +300,7 @@ export { WordPressRecipe as recipe };
 export const WordPressRecipe: Recipe = {
   name: 'wordpress',
   description: 'WordPress CMS',
-  verify: 'curl -sfL http://localhost:80/ | grep -qi wordpress',
+  verify: `curl -sfL http://localhost:${WORDPRESS_PORT}/ | grep -qi wordpress`,
   depends: ['nginx', 'php-fpm', 'mysql'],
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {

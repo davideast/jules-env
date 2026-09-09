@@ -162,4 +162,12 @@ describe("Integration: Nginx Recipe", () => {
       expect(plan.env['NGINX_DOC_ROOT']).toBe('/var/www/html');
     });
   }
+
+  test("verify targets the port the plan actually serves", async () => {
+    const plan = await NginxRecipe.resolve(context);
+    const port = plan.env['NGINX_PORT'];
+
+    expect(port).toBeDefined();
+    expect(NginxRecipe.verify).toContain(`localhost:${port}`);
+  });
 });

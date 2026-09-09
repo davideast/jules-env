@@ -2,6 +2,10 @@ import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
 import { spawnSync } from 'node:child_process';
 
+// Homebrew's nginx serves on 8080 so it can run unprivileged; the Debian
+// package serves on 80. `verify` and the plan must agree on which.
+const NGINX_PORT = process.platform === 'darwin' ? '8080' : '80';
+
 async function resolveDarwin(_ctx: UseContext): Promise<ExecutionPlan> {
   const installSteps = [
     {
@@ -41,7 +45,7 @@ async function resolveDarwin(_ctx: UseContext): Promise<ExecutionPlan> {
   const env = {
     NGINX_CONF_DIR: `${brewPrefix}/etc/nginx`,
     NGINX_DOC_ROOT: `${brewPrefix}/var/www`,
-    NGINX_PORT: '8080',
+    NGINX_PORT,
   };
 
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
@@ -76,7 +80,7 @@ fi`,
   const env = {
     NGINX_CONF_DIR: '/etc/nginx',
     NGINX_DOC_ROOT: '/var/www/html',
-    NGINX_PORT: '80',
+    NGINX_PORT,
   };
 
   return ExecutionPlanSchema.parse({ installSteps, env, paths: [] });
@@ -86,7 +90,7 @@ export { NginxRecipe as recipe };
 export const NginxRecipe: Recipe = {
   name: 'nginx',
   description: 'Nginx web server',
-  verify: 'curl -sf http://localhost:80/ >/dev/null 2>&1',
+  verify: `curl -sf http://localhost:${NGINX_PORT}/ >/dev/null 2>&1`,
   resolve: async (ctx: UseContext): Promise<ExecutionPlan> => {
     switch (process.platform) {
       case 'darwin':
