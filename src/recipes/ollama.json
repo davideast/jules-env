@@ -31,7 +31,7 @@
       "id": "pull-model",
       "label": "Pull {{preset}} model",
       "cmd": "ollama pull {{preset}}",
-      "checkCmd": "ollama list | grep {{preset}}"
+      "checkCmd": "ollama list | awk '{print $1}' | grep -qxF -e '{{preset}}' -e '{{preset}}:latest'"
     }
   ],
   "env": {
