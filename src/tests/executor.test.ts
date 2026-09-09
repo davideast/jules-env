@@ -1,10 +1,15 @@
 import { describe, test, expect, afterAll } from "bun:test";
-import { executePlan } from '../core/executor';
+import { executePlan, julesStateDir, shellenvPath } from '../core/executor';
 import { ExecutionPlanSchema } from '../core/spec';
 import { join } from 'node:path';
 import { tmpdir, homedir } from 'node:os';
 import { existsSync, unlinkSync, readFileSync, rmSync, mkdtempSync, mkdirSync, appendFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
+
+// Redirect persisted state into a throwaway directory for the whole file.
+// Without this the suite deletes and rewrites the developer's real
+// ~/.jules/shellenv, which is the very file this tool exists to produce.
+process.env['JULES_HOME'] = mkdtempSync(join(tmpdir(), 'jules-home-'));
 
 describe("Executor", () => {
     const tempFile = join(tmpdir(), `jules-test-${Date.now()}.txt`);
@@ -83,8 +88,8 @@ describe("Executor", () => {
         });
 
         // Clean up ~/.jules/shellenv before test
-        const julesDir = join(homedir(), '.jules');
-        const stateFile = join(julesDir, 'shellenv');
+        const julesDir = julesStateDir();
+        const stateFile = shellenvPath();
         if (existsSync(stateFile)) unlinkSync(stateFile);
 
         await executePlan(plan, false);
@@ -115,7 +120,7 @@ describe("Executor", () => {
         expect(existsSync(cwdJulesDir)).toBe(false);
 
         // Cleanup home shellenv
-        const homeStateFile = join(homedir(), '.jules', 'shellenv');
+        const homeStateFile = shellenvPath();
         if (existsSync(homeStateFile)) unlinkSync(homeStateFile);
     });
 
@@ -148,14 +153,14 @@ describe("Executor", () => {
             rmSync(tempRepo, { recursive: true, force: true });
 
             // Cleanup home shellenv
-            const homeStateFile = join(homedir(), '.jules', 'shellenv');
+            const homeStateFile = shellenvPath();
             if (existsSync(homeStateFile)) unlinkSync(homeStateFile);
         }
     });
 
     test("auto-sources .jules/shellenv before command", async () => {
-        const julesDir = join(homedir(), '.jules');
-        const stateFile = join(julesDir, 'shellenv');
+        const julesDir = julesStateDir();
+        const stateFile = shellenvPath();
 
         // Ensure directory exists
         if (!existsSync(julesDir)) mkdirSync(julesDir, { recursive: true });
@@ -232,8 +237,8 @@ describe("Executor", () => {
     });
 
     test("checkCmd works when shellenv does not exist", async () => {
-        const julesDir = join(homedir(), '.jules');
-        const stateFile = join(julesDir, 'shellenv');
+        const julesDir = julesStateDir();
+        const stateFile = shellenvPath();
         const markerFile = join(tmpdir(), `jules-noenv-${Date.now()}.txt`);
 
         // Temporarily remove shellenv if it exists
@@ -281,5 +286,76 @@ describe("Executor", () => {
 
         // Should not throw
         await executePlan(plan, true, "My Label");
+    });
+});
+
+describe("Executor state directory", () => {
+    const savedJulesHome = process.env['JULES_HOME'];
+
+    function withStateDir<T>(fn: (dir: string) => Promise<T>): Promise<T> {
+        const dir = mkdtempSync(join(tmpdir(), 'jules-state-'));
+        process.env['JULES_HOME'] = dir;
+        return fn(dir).finally(() => {
+            if (savedJulesHome === undefined) {
+                delete process.env['JULES_HOME'];
+            } else {
+                process.env['JULES_HOME'] = savedJulesHome;
+            }
+        });
+    }
+
+    test("JULES_HOME redirects shellenv away from the user's home directory", async () => {
+        // Deliberately the REAL home path, not shellenvPath(), so this asserts
+        // the user's own file is left alone.
+        const homeStateFile = join(homedir(), '.jules', 'shellenv');
+        const homeExistedBefore = existsSync(homeStateFile);
+        const homeContentBefore = homeExistedBefore ? readFileSync(homeStateFile, 'utf-8') : null;
+
+        await withStateDir(async (dir) => {
+            const plan = ExecutionPlanSchema.parse({
+                installSteps: [],
+                env: { "SCOPED_VAR": "SCOPED_VAL" },
+                paths: ["/scoped/path"],
+                files: [],
+            });
+
+            await executePlan(plan, false);
+
+            const scopedContent = readFileSync(join(dir, 'shellenv'), 'utf-8');
+            expect(scopedContent).toContain('export SCOPED_VAR="SCOPED_VAL"');
+            expect(scopedContent).toContain('export PATH="/scoped/path:$PATH"');
+        });
+
+        // The real home shellenv must be exactly as we found it.
+        expect(existsSync(homeStateFile)).toBe(homeExistedBefore);
+        if (homeContentBefore !== null) {
+            expect(readFileSync(homeStateFile, 'utf-8')).toBe(homeContentBefore);
+        }
+    });
+
+    test("checkCmd sources the shellenv from JULES_HOME", async () => {
+        await withStateDir(async (dir) => {
+            mkdirSync(dir, { recursive: true });
+            appendFileSync(join(dir, 'shellenv'), 'export SCOPED_SENTINEL="found"\n');
+
+            const marker = join(tmpdir(), `jules-scoped-${Date.now()}.txt`);
+            const plan = ExecutionPlanSchema.parse({
+                installSteps: [{
+                    id: 'scoped',
+                    label: 'Scoped step',
+                    // Only runs when the check FAILS, so the marker appearing
+                    // means the sentinel was not sourced.
+                    cmd: `touch ${marker}`,
+                    checkCmd: 'test "$SCOPED_SENTINEL" = "found"',
+                }],
+                env: {},
+                paths: [],
+                files: [],
+            });
+
+            await executePlan(plan, false);
+
+            expect(existsSync(marker)).toBe(false);
+        });
     });
 });
