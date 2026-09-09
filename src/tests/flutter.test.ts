@@ -1,6 +1,19 @@
 import { describe, test, expect } from "bun:test";
 import { FlutterRecipe } from '../recipes/flutter';
 import { UseContextSchema, ExecutionPlanSchema } from '../core/spec';
+import { spawnSync } from 'node:child_process';
+
+// The macOS SDK location is derived from Homebrew's caskroom, so these
+// assertions only mean anything on a Mac that has Homebrew installed.
+function brewCaskroom(): string {
+  if (process.platform !== 'darwin') return '';
+  try {
+    const result = spawnSync('brew', ['--caskroom'], { encoding: 'utf-8' });
+    return result.status === 0 ? result.stdout.trim() : '';
+  } catch {
+    return '';
+  }
+}
 
 describe("Integration: Flutter Recipe", () => {
   const context = UseContextSchema.parse({
@@ -123,4 +136,23 @@ describe("Integration: Flutter Recipe", () => {
     const plan = await FlutterRecipe.resolve(context);
     expect(plan.env['DART_SDK']).toBeUndefined();
   });
+
+  const caskroom = brewCaskroom();
+  if (caskroom) {
+    test("macOS: FLUTTER_ROOT resolves under the real Homebrew caskroom", async () => {
+      const plan = await FlutterRecipe.resolve(context);
+      expect(plan.env['FLUTTER_ROOT']).toStartWith(`${caskroom}/flutter/`);
+    });
+
+    test("macOS: flutter bin path resolves under the real Homebrew caskroom", async () => {
+      const plan = await FlutterRecipe.resolve(context);
+      expect(plan.paths[0]).toStartWith(`${caskroom}/flutter/`);
+    });
+
+    test("macOS: precache check probes the resolved SDK path", async () => {
+      const plan = await FlutterRecipe.resolve(context);
+      const precacheStep = plan.installSteps.find(s => s.id === 'precache-web');
+      expect(precacheStep?.checkCmd).toContain(caskroom);
+    });
+  }
 });

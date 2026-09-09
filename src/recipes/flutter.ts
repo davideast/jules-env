@@ -3,6 +3,41 @@ import { ExecutionPlanSchema } from '../core/spec';
 import { spawnSync } from 'node:child_process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
+  // `brew --caskroom` prints the cask install root. It differs by architecture
+  // (/opt/homebrew on Apple Silicon, /usr/local on Intel), so it must be probed
+  // rather than assumed.
+  let caskroom = '';
+  try {
+    const result = spawnSync('brew', ['--caskroom'], { encoding: 'utf-8' });
+    if (result.status === 0) {
+      caskroom = result.stdout.trim();
+    }
+  } catch (e) {
+    // ignore — brew may not be installed
+  }
+
+  if (!caskroom) {
+    caskroom = '/usr/local/Caskroom';
+  }
+
+  let flutterRoot = '';
+  try {
+    // Find the installed version directory inside the caskroom
+    const ls = spawnSync('ls', [`${caskroom}/flutter`], { encoding: 'utf-8' });
+    if (ls.status === 0) {
+      const version = ls.stdout.trim().split('\n')[0];
+      if (version) {
+        flutterRoot = `${caskroom}/flutter/${version}/flutter`;
+      }
+    }
+  } catch (e) {
+    // ignore — the cask may not be installed yet
+  }
+
+  if (!flutterRoot) {
+    flutterRoot = `${caskroom}/flutter/latest/flutter`;
+  }
+
   const installSteps = [
     {
       id: 'install-flutter',
@@ -14,34 +49,9 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
       id: 'precache-web',
       label: 'Precache Flutter web artifacts',
       cmd: 'flutter precache --web',
-      checkCmd: 'test -d "$(brew --cask --room 2>/dev/null || echo /usr/local/Caskroom)/flutter"/*/flutter/bin/cache/flutter_web_sdk',
+      checkCmd: `test -d ${flutterRoot}/bin/cache/flutter_web_sdk`,
     },
   ];
-
-  let flutterRoot = '';
-  try {
-    const result = spawnSync('brew', ['--cask', '--room'], { encoding: 'utf-8' });
-    if (result.status === 0) {
-      const caskroom = result.stdout.trim();
-      // Find the actual flutter path inside the caskroom
-      const ls = spawnSync('ls', [caskroom + '/flutter'], { encoding: 'utf-8' });
-      if (ls.status === 0) {
-        const version = ls.stdout.trim().split('\n')[0];
-        if (version) {
-          flutterRoot = `${caskroom}/flutter/${version}/flutter`;
-        }
-      }
-    }
-  } catch (e) {
-    // ignore — brew may not be installed
-  }
-
-  if (!flutterRoot) {
-    flutterRoot = '/usr/local/Caskroom/flutter/latest/flutter';
-  }
-
-  // Update precache checkCmd with resolved path
-  installSteps[1]!.checkCmd = `test -d ${flutterRoot}/bin/cache/flutter_web_sdk`;
 
   const env = {
     FLUTTER_ROOT: flutterRoot,
