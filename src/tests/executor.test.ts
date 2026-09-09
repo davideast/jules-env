@@ -4,7 +4,7 @@ import { ExecutionPlanSchema } from '../core/spec';
 import { join } from 'node:path';
 import { tmpdir, homedir } from 'node:os';
 import { existsSync, unlinkSync, readFileSync, rmSync, mkdtempSync, mkdirSync, appendFileSync } from 'node:fs';
-import { execSync } from 'node:child_process';
+import { execSync, spawnSync } from 'node:child_process';
 
 // Redirect persisted state into a throwaway directory for the whole file.
 // Without this the suite deletes and rewrites the developer's real
@@ -357,5 +357,49 @@ describe("Executor state directory", () => {
 
             expect(existsSync(marker)).toBe(false);
         });
+    });
+});
+
+describe("Executor file paths", () => {
+    // Bun's os.homedir() does not track runtime changes to process.env.HOME,
+    // so the home directory has to be set for a child process instead.
+    test("expands a leading ~ in a file path to the home directory", () => {
+        const fakeHome = mkdtempSync(join(tmpdir(), 'jules-tilde-home-'));
+        const workDir = mkdtempSync(join(tmpdir(), 'jules-tilde-cwd-'));
+        const executorPath = join(import.meta.dir, '..', 'core', 'executor.ts');
+
+        const script = `
+            import { executePlan } from ${JSON.stringify(executorPath)};
+            await executePlan({
+                installSteps: [], env: {}, paths: [],
+                files: [{ path: '~/notes/hello.txt', content: 'hi' }],
+            }, false);
+        `;
+
+        const result = spawnSync(process.execPath, ['-e', script], {
+            encoding: 'utf-8',
+            cwd: workDir,
+            env: { ...process.env, HOME: fakeHome, JULES_HOME: join(fakeHome, '.jules') },
+        });
+
+        expect(result.status).toBe(0);
+        expect(existsSync(join(fakeHome, 'notes', 'hello.txt'))).toBe(true);
+        expect(readFileSync(join(fakeHome, 'notes', 'hello.txt'), 'utf-8')).toBe('hi');
+        // A literal ~ directory next to the caller means no expansion happened.
+        expect(existsSync(join(workDir, '~'))).toBe(false);
+    });
+
+    test("leaves absolute file paths untouched", async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'jules-abs-'));
+        const target = join(dir, 'sub', 'file.txt');
+
+        await executePlan(ExecutionPlanSchema.parse({
+            installSteps: [],
+            env: {},
+            paths: [],
+            files: [{ path: target, content: 'abs' }],
+        }), false);
+
+        expect(readFileSync(target, 'utf-8')).toBe('abs');
     });
 });
