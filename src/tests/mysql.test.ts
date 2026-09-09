@@ -1,6 +1,32 @@
 import { describe, test, expect } from "bun:test";
 import { MysqlRecipe } from '../recipes/mysql';
 import { UseContextSchema, ExecutionPlanSchema } from '../core/spec';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
+/**
+ * Runs a step's shell command with a stub `mariadb` on PATH that records the
+ * arguments it actually received. Lets a test assert what the shell delivers
+ * to the client, rather than how the command string happens to be spelled.
+ */
+function captureMariadbArgs(cmd: string): { argv: string; stderr: string } {
+  const dir = mkdtempSync(join(tmpdir(), 'jules-mysql-'));
+  const argvFile = join(dir, 'argv.txt');
+  const stub = join(dir, 'mariadb');
+  writeFileSync(stub, '#!/bin/sh\nprintf \'%s\\n\' "$@" > "$JULES_TEST_ARGV"\n', { mode: 0o755 });
+
+  const result = spawnSync('sh', ['-c', cmd], {
+    encoding: 'utf-8',
+    env: { ...process.env, PATH: `${dir}:${process.env['PATH']}`, JULES_TEST_ARGV: argvFile },
+  });
+
+  return {
+    argv: existsSync(argvFile) ? readFileSync(argvFile, 'utf-8') : '',
+    stderr: result.stderr ?? '',
+  };
+}
 
 describe("Integration: MySQL Recipe", () => {
   const context = UseContextSchema.parse({
@@ -77,6 +103,26 @@ describe("Integration: MySQL Recipe", () => {
     const plan = await MysqlRecipe.resolve(context);
     const createStep = plan.installSteps.find(s => s.id === 'create-database');
     expect(createStep).toBeUndefined();
+  });
+
+  test("preset reaches mariadb as a backticked identifier, not shell substitution", async () => {
+    const plan = await MysqlRecipe.resolve(contextWithPreset);
+    const createStep = plan.installSteps.find(s => s.id === 'create-database')!;
+
+    const { argv, stderr } = captureMariadbArgs(createStep.cmd);
+
+    expect(argv).toContain('CREATE DATABASE IF NOT EXISTS `testdb`');
+    expect(stderr).not.toContain('command not found');
+  });
+
+  test("preset reaches the check query without shell substitution", async () => {
+    const plan = await MysqlRecipe.resolve(contextWithPreset);
+    const createStep = plan.installSteps.find(s => s.id === 'create-database')!;
+
+    const { argv, stderr } = captureMariadbArgs(createStep.checkCmd!);
+
+    expect(argv).toContain('SHOW DATABASES');
+    expect(stderr).not.toContain('command not found');
   });
 
   test("with preset -> has create-database step", async () => {
