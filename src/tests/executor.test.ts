@@ -333,6 +333,44 @@ describe("Executor state directory", () => {
         }
     });
 
+    test("does not duplicate exports when the same plan runs repeatedly", async () => {
+        await withStateDir(async (dir) => {
+            const plan = ExecutionPlanSchema.parse({
+                installSteps: [],
+                env: { "DUP_VAR": "once" },
+                paths: ["/dup/bin"],
+                files: [],
+            });
+
+            await executePlan(plan, false);
+            await executePlan(plan, false);
+            await executePlan(plan, false);
+
+            const lines = readFileSync(join(dir, 'shellenv'), 'utf-8').split('\n').filter(Boolean);
+
+            expect(lines.filter(l => l === 'export DUP_VAR="once"')).toHaveLength(1);
+            expect(lines.filter(l => l === 'export PATH="/dup/bin:$PATH"')).toHaveLength(1);
+        });
+    });
+
+    test("still appends entries contributed by a different recipe", async () => {
+        await withStateDir(async (dir) => {
+            await executePlan(ExecutionPlanSchema.parse({
+                installSteps: [], env: { "FIRST": "1" }, paths: ["/first/bin"], files: [],
+            }), false);
+            await executePlan(ExecutionPlanSchema.parse({
+                installSteps: [], env: { "SECOND": "2" }, paths: ["/second/bin"], files: [],
+            }), false);
+
+            const content = readFileSync(join(dir, 'shellenv'), 'utf-8');
+
+            expect(content).toContain('export FIRST="1"');
+            expect(content).toContain('export SECOND="2"');
+            expect(content).toContain('export PATH="/first/bin:$PATH"');
+            expect(content).toContain('export PATH="/second/bin:$PATH"');
+        });
+    });
+
     test("checkCmd sources the shellenv from JULES_HOME", async () => {
         await withStateDir(async (dir) => {
             mkdirSync(dir, { recursive: true });

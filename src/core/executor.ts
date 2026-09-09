@@ -1,6 +1,7 @@
 import type { ExecutionPlan } from './spec';
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile, appendFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { mkdir, writeFile, appendFile, readFile } from 'node:fs/promises';
 import { resolve, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
@@ -131,9 +132,23 @@ export async function executePlan(plan: ExecutionPlan, dryRun: boolean, label?: 
     console.log(stateContent);
   } else {
     await mkdir(julesDir, { recursive: true });
-    // Always create or append to ensure file exists for sourcing
-    await appendFile(stateFile, stateContent);
-    if (stateContent) {
+
+    // Always create the file so it exists for sourcing, even with nothing to add.
+    const existing = existsSync(stateFile) ? await readFile(stateFile, 'utf-8') : '';
+    if (!existsSync(stateFile)) {
+      await writeFile(stateFile, '');
+    }
+
+    // Recipes are re-runnable and compose by appending, so skip lines already
+    // present rather than stacking another copy on every run.
+    const alreadyPresent = new Set(existing.split('\n').filter(Boolean));
+    const additions = stateContent
+      .split('\n')
+      .filter(Boolean)
+      .filter((line) => !alreadyPresent.has(line));
+
+    if (additions.length > 0) {
+      await appendFile(stateFile, `${additions.join('\n')}\n`);
       console.log(`Updated ${stateFile}`);
     }
   }
