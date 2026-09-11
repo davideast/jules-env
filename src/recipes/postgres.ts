@@ -34,18 +34,10 @@ async function resolveDarwin(ctx: UseContext): Promise<ExecutionPlan> {
   // Probe for brew prefix
   let brewPrefix = '/usr/local/opt/postgresql@16';
   try {
-    if (typeof Bun !== 'undefined') {
-      const proc = Bun.spawn(['brew', '--prefix', 'postgresql@16'], { stdout: 'pipe' });
-      const output = await new Response(proc.stdout).text();
-      if (output.trim()) {
-        brewPrefix = output.trim();
-      }
-    } else {
-      const { spawnSync } = await import('node:child_process');
-      const proc = spawnSync('brew', ['--prefix', 'postgresql@16'], { encoding: 'utf-8' });
-      if (proc.stdout && proc.stdout.trim()) {
-        brewPrefix = proc.stdout.trim();
-      }
+    const { execAsync } = await import('../core/process');
+    const proc = await execAsync('brew', ['--prefix', 'postgresql@16']);
+    if (proc.status === 0 && proc.stdout.trim()) {
+      brewPrefix = proc.stdout.trim();
     }
   } catch (e) {
     // Ignore error, fallback to default

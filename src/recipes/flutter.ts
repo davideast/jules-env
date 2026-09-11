@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { execAsync } from '../core/process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   // `brew --caskroom` prints the cask install root. It differs by architecture
@@ -8,7 +8,7 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
   // rather than assumed.
   let caskroom = '';
   try {
-    const result = spawnSync('brew', ['--caskroom'], { encoding: 'utf-8' });
+    const result = await execAsync('brew', ['--caskroom']);
     if (result.status === 0) {
       caskroom = result.stdout.trim();
     }
@@ -23,7 +23,7 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
   let flutterRoot = '';
   try {
     // Find the installed version directory inside the caskroom
-    const ls = spawnSync('ls', [`${caskroom}/flutter`], { encoding: 'utf-8' });
+    const ls = await execAsync('ls', [`${caskroom}/flutter`]);
     if (ls.status === 0) {
       const version = ls.stdout.trim().split('\n')[0];
       if (version) {

@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { execAsync } from '../core/process';
 
 async function resolveDarwin(): Promise<ExecutionPlan> {
   const installSteps = [{
@@ -12,7 +12,7 @@ async function resolveDarwin(): Promise<ExecutionPlan> {
 
   let dotnetPrefix = '';
   try {
-    const result = spawnSync('brew', ['--prefix', 'dotnet-sdk'], { encoding: 'utf-8' });
+    const result = await execAsync('brew', ['--prefix', 'dotnet-sdk']);
     if (result.status === 0) {
       dotnetPrefix = result.stdout.trim();
     }
