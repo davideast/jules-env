@@ -1,6 +1,6 @@
 import type { Recipe, UseContext, ExecutionPlan } from '../core/spec';
 import { ExecutionPlanSchema } from '../core/spec';
-import { spawnSync } from 'node:child_process';
+import { execAsync } from '../core/process';
 import { randomBytes } from 'node:crypto';
 
 // Must match the port the nginx recipe serves on for this platform.
@@ -15,7 +15,7 @@ async function resolveDarwin(ctx: UseContext): Promise<ExecutionPlan> {
 
   let brewPrefix = '';
   try {
-    const result = spawnSync('brew', ['--prefix'], { encoding: 'utf-8' });
+    const result = await execAsync('brew', ['--prefix']);
     if (result.status === 0) {
       brewPrefix = result.stdout.trim();
     }
